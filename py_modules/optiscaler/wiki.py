@@ -292,6 +292,8 @@ def _split_row(line):
     match = ROW_RE.match(line)
     if not match and _lost_its_leading_pipe(line):
         match = ROW_RE.match("|" + line)
+    if not match and _lost_its_trailing_pipe(line):
+        match = ROW_RE.match(line + "|")
     if not match:
         return None
     return [c.strip() for c in match.group(1).split("|")]
@@ -315,6 +317,22 @@ def _lost_its_leading_pipe(line):
         bool(line)
         and not line.startswith("|")
         and line.endswith("|")
+        and line.count("|") >= 3
+    )
+
+
+def _lost_its_trailing_pipe(line):
+    """Whether a line is a table row saved without its last pipe.
+
+    Markdown does not need that one, so GitHub renders the row as any other,
+    and on 1 November 2026 six games of the list had none - Pacific Drive,
+    Skyrim and Zenless Zone Zero among them - each dropped as no row at all.
+    Narrow the same way: it starts as a row starts and has a row's separators.
+    """
+    return (
+        bool(line)
+        and line.startswith("|")
+        and not line.endswith("|")
         and line.count("|") >= 3
     )
 

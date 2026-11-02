@@ -7,6 +7,22 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+### Fixed
+
+- **Six games of the compatibility list were missing.** Their rows were
+  saved without the last pipe, which Markdown does not need and GitHub
+  renders as any other row, so the parser read no row there: Pacific Drive,
+  Skyrim Special Edition, Zenless Zone Zero, Rune Factory Guardians of
+  Azuma, Dawn Break Demo and Directorate Novitiate Demo. They are read now,
+  and the bundled list has all 717 entries.
+
+### Changed
+
+- **@decky/ui 4.16.5** (was 4.12.0), with its component lookups fixed for
+  newer Steam clients.
+- **The reference OptiScaler.ini is the nightly of 2026-11-01's.** The one
+  change: FGNvngxReplacement also takes the name of a folder in `custom`.
+
 ## [0.2.4] - 2026-11-02
 
 ### Fixed

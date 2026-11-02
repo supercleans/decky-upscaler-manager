@@ -1914,6 +1914,8 @@ def check_compat_list_shapes():
         "| [Alpha](Alpha) | \u2705 | DLSS | \u2728 | Needs -dx12 | [1](u) |\n"
         "[Bravo](Bravo) | \u2705 | DLSS |  | Saved without its first pipe | [1](u) |\n"
         "| [Charlie](Charlie) | \u2705 | XeSS |  | After the broken row | [1](u) |\n"
+        "| [Golf](Golf) | \u2705 | DLSS | \u2728 | Saved without its last pipe | [1](u)\n"
+        "| [Hotel](Hotel) | \u2705 | DLSS |  |  | [1](u) |\n"
         "\n"
         "## Upscaler mods support\n"
         "\n"
@@ -1928,6 +1930,10 @@ def check_compat_list_shapes():
     check("the recovered row keeps its own columns",
           entries.get("Bravo", {}).get("notes") == "Saved without its first pipe",
           entries.get("Bravo", {}).get("notes"))
+    check("a row that lost its last pipe is read with its own columns",
+          entries.get("Golf", {}).get("notes") == "Saved without its last pipe"
+          and entries["Golf"]["optipatcher"] is True and "Hotel" in entries,
+          entries.get("Golf"))
     check("a table with no OptiPatcher column claims none",
           entries["Delta"]["optipatcher"] is False)
     check("and its notes are its notes, not its images",

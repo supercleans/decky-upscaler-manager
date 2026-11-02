@@ -128,7 +128,8 @@ OPTIONS = [
             "Arturs",
             "FFX",
             "Combo"
-        ]
+        ],
+        "custom": true
     },
     {
         "section": "FrameGen",
