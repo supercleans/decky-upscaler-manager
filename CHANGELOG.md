@@ -7,6 +7,16 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+### Removed
+
+- **lsfg-vk.** Its install, updates, per-game frame generation, live
+  controls and workarounds are gone again: lsfg-vk is left to be managed
+  outside this plugin (decky-lsfg-vk, or by hand). Nothing it installed or
+  wrote is touched: an lsfg-vk the plugin installed into ~/.local stays,
+  as do ~/.config/lsfg-vk/conf.toml and the launch options a game was given
+  (LSFGVK_PROFILE and the workaround variables), which can be taken out in
+  Steam or left for decky-lsfg-vk.
+
 ## [0.2.2] - 2026-10-30
 
 ### Added
