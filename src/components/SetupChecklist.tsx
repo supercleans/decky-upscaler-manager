@@ -1,7 +1,6 @@
 import {
   ButtonItem,
   DialogButton,
-  Field,
   Focusable,
   PanelSection,
   PanelSectionRow,
@@ -48,7 +47,7 @@ import type {
   Recommendation,
   Upscaler,
 } from "../types";
-import { Mono, Notice, Pill } from "./Common";
+import { BadgeField, Mono, Notice, Pill } from "./Common";
 import { OPTIPATCHER_WHY, optipatcherMissed } from "./OptipatcherPanel";
 import { PdPluginGuide } from "./PdPluginGuide";
 import { RemovePrompt } from "./RemovePrompt";
@@ -263,7 +262,7 @@ function PluginStep({
   return (
     <>
       <PanelSectionRow>
-        <Field
+        <BadgeField
           label={
             <StepLabel done={present}>
               {present ? (
@@ -298,8 +297,6 @@ function PluginStep({
                      OptiScaler가 로드되어도 화면에 아무 변화가 없습니다.`
           }
           bottomSeparator="standard"
-          childrenLayout="inline"
-          childrenContainerWidth="min"
           focusable
         >
           {present ? (
@@ -309,7 +306,7 @@ function PluginStep({
           ) : ready ? null : (
             <Pill color="#5a4a20">직접</Pill>
           )}
-        </Field>
+        </BadgeField>
       </PanelSectionRow>
       {!present && ready && installed ? (
         <PanelSectionRow>
@@ -373,7 +370,7 @@ function RequirementsSection({ plan }: Readonly<{ plan: AutoPlan | null }>) {
       </PanelSectionRow>
       {items.map((item) => (
         <PanelSectionRow key={item.key}>
-          <Field
+          <BadgeField
             label={
               <span>
                 {item.name}{" "}
@@ -392,12 +389,10 @@ function RequirementsSection({ plan }: Readonly<{ plan: AutoPlan | null }>) {
             }
             focusable
             bottomSeparator="standard"
-            childrenLayout="inline"
-            childrenContainerWidth="min"
             {...({ "data-requirement": item.key } as Record<string, string>)}
           >
             {item.required ? <Pill color="#8a3f6a">필수</Pill> : <Pill>권장</Pill>}
-          </Field>
+          </BadgeField>
         </PanelSectionRow>
       ))}
     </PanelSection>
@@ -457,7 +452,7 @@ function Fsr4LiteStep({
         .join(", ")} 값이 바뀌었습니다. 오버레이에서 덮어썼을 수 있습니다. 선택하면 프리셋을 다시 적용합니다.`;
   return (
     <PanelSectionRow>
-      <Field
+      <BadgeField
         label={
           <StepLabel done={ready}>{ready ? `${name} 켜짐` : `${name} 꺼짐`}</StepLabel>
         }
@@ -466,11 +461,9 @@ function Fsr4LiteStep({
         onActivate={busy ? undefined : onApply}
         focusable
         bottomSeparator="standard"
-        childrenLayout="inline"
-        childrenContainerWidth="min"
       >
         {ready ? <Pill color="#2f6b3f">준비됨</Pill> : <Pill color="#5a4a20">다시 적용</Pill>}
-      </Field>
+      </BadgeField>
     </PanelSectionRow>
   );
 }
@@ -978,21 +971,19 @@ export function SetupChecklist({
   const foldRows = (
     <PanelSection>
       <PanelSectionRow>
-        <Field
+        <BadgeField
           label="수동 설치"
           description="파일 이름, 폴더, OptiPatcher, 실행 옵션."
           onClick={onManual}
           onActivate={onManual}
           focusable
           bottomSeparator="standard"
-          childrenLayout="inline"
-          childrenContainerWidth="min"
         >
           <span style={{ opacity: 0.5 }}>›</span>
-        </Field>
+        </BadgeField>
       </PanelSectionRow>
       <PanelSectionRow>
-        <Field
+        <BadgeField
           label="로그"
           // What the log says once there is one: that sentence used to be on
           // the "Not running" row, which was never a step of setting a game up.
@@ -1005,11 +996,9 @@ export function SetupChecklist({
           onActivate={onLogs}
           focusable
           bottomSeparator="standard"
-          childrenLayout="inline"
-          childrenContainerWidth="min"
         >
           {installed ? logPill : <Pill>로그 없음</Pill>}
-        </Field>
+        </BadgeField>
       </PanelSectionRow>
     </PanelSection>
   );
@@ -1090,7 +1079,7 @@ export function SetupChecklist({
           <PanelSection>
             {ref ? (
               <PanelSectionRow>
-                <Field
+                <BadgeField
                   label={
                     <StepLabel n={ref.automatic ? next() : undefined} done={refPresent}>
                       {refPresent ? "REFramework 이미 있음" : "REFramework 설치"}
@@ -1104,8 +1093,6 @@ export function SetupChecklist({
                          “${ref.source}” 참고). ${reframeworkSummary(ref)}`
                   }
                   bottomSeparator="standard"
-                  childrenLayout="inline"
-                  childrenContainerWidth="min"
                   focusable
                 >
                   {ref.automatic ? (
@@ -1113,7 +1100,7 @@ export function SetupChecklist({
                   ) : (
                     <Pill color="#5a4a20">직접</Pill>
                   )}
-                </Field>
+                </BadgeField>
               </PanelSectionRow>
             ) : null}
 
@@ -1129,7 +1116,7 @@ export function SetupChecklist({
             ) : null}
 
             <PanelSectionRow>
-              <Field
+              <BadgeField
                 label={
                   <StepLabel n={next()}>
                     {engineName}를 <Mono>{planned.filename}</Mono> 파일로 설치
@@ -1152,11 +1139,9 @@ export function SetupChecklist({
                         게임을 렌더링하는 실행 파일이 있는 곳입니다.`
                 }
                 bottomSeparator="standard"
-                childrenLayout="inline"
-                childrenContainerWidth="min"
               >
                 <span style={{ fontSize: "11px", opacity: 0.5 }}>필수</span>
-              </Field>
+              </BadgeField>
             </PanelSectionRow>
 
             {/* Only where the wiki's OptiPatcher column lists the game: a
@@ -1283,7 +1268,7 @@ export function SetupChecklist({
     <>
       <PanelSection title={detail.name}>
         <PanelSectionRow>
-          <Field
+          <BadgeField
             label={<StepLabel done><Mono>{detail.install.filename}</Mono> 파일로 설치됨</StepLabel>}
             description={[
               detail.install.engine === "helixsr"
@@ -1306,16 +1291,14 @@ export function SetupChecklist({
             onActivate={onManual}
             focusable
             bottomSeparator="standard"
-            childrenLayout="inline"
-            childrenContainerWidth="min"
           >
             <Pill>변경</Pill>
-          </Field>
+          </BadgeField>
         </PanelSectionRow>
 
         {detail.install.managed && (detail.install.upscaler ?? "fsr4-lite") !== upscaler ? (
           <PanelSectionRow>
-            <Field
+            <BadgeField
               label={<StepLabel>{name}로 바꾸기</StepLabel>}
               description={
                 blocked ??
@@ -1326,11 +1309,9 @@ export function SetupChecklist({
               onActivate={busy || blocked ? undefined : () => void switchUpscaler()}
               focusable
               bottomSeparator="standard"
-              childrenLayout="inline"
-              childrenContainerWidth="min"
             >
               <Pill color={blocked ? undefined : "#3a6ea5"}>{blocked ? "불가" : "바꾸기"}</Pill>
-            </Field>
+            </BadgeField>
           </PanelSectionRow>
         ) : null}
 
@@ -1364,7 +1345,7 @@ export function SetupChecklist({
             </PanelSectionRow>
           ) : (
             <PanelSectionRow>
-              <Field
+              <BadgeField
                 label={<StepLabel>Steam 실행 옵션</StepLabel>}
                 description={`Steam이 이 게임의 실행 옵션을 알려 주지 않아 여기서 확인할 수
                   없습니다. 다시 설정해도 문제없습니다.`}
@@ -1372,11 +1353,9 @@ export function SetupChecklist({
                 onActivate={() => void applyLaunchOptions(launchWanted)}
                 focusable
                 bottomSeparator="standard"
-                childrenLayout="inline"
-                childrenContainerWidth="min"
               >
                 <Pill>설정</Pill>
-              </Field>
+              </BadgeField>
             </PanelSectionRow>
           )
         ) : null}
@@ -1427,17 +1406,15 @@ export function SetupChecklist({
               </PanelSectionRow>
             ) : (
               <PanelSectionRow>
-                <Field
+                <BadgeField
                   label={<StepLabel done={refPresent}>REFramework 없음</StepLabel>}
                   description={`이것이 없으면 OptiScaler가 로드되어도 화면에 아무 변화가 없습니다(이
                     게임 항목의 “${ref.source}” 참고). ${reframeworkSummary(ref)}`}
                   focusable
                   bottomSeparator="standard"
-                  childrenLayout="inline"
-                  childrenContainerWidth="min"
                 >
                   <Pill color="#5a4a20">직접</Pill>
-                </Field>
+                </BadgeField>
               </PanelSectionRow>
             )}
             <PluginStep
@@ -1466,18 +1443,16 @@ export function SetupChecklist({
             </PanelSectionRow>
           ) : (
             <PanelSectionRow>
-              <Field
+              <BadgeField
                 label={<StepLabel>일치하는 위키 항목 없음</StepLabel>}
                 description="자동으로 최신 상태로 유지되는 설정이 없습니다. “수동 설치”에서 항목을 직접 고르거나 설정을 직접 관리하세요."
                 onClick={onManual}
                 onActivate={onManual}
                 focusable
                 bottomSeparator="standard"
-                childrenLayout="inline"
-                childrenContainerWidth="min"
               >
                 <span style={{ opacity: 0.5 }}>›</span>
-              </Field>
+              </BadgeField>
             </PanelSectionRow>
           )
         ) : null}
@@ -1510,18 +1485,16 @@ export function SetupChecklist({
             Logs, where it belongs whether or not the game is running. */}
         {running ? (
           <PanelSectionRow>
-            <Field
+            <BadgeField
               label={<StepLabel done>실행 중</StepLabel>}
               description={`게임에서 Insert를 누르면 OptiScaler 오버레이가 열립니다. ${logSummary}`}
               onClick={onLogs}
               onActivate={onLogs}
               focusable
               bottomSeparator="standard"
-              childrenLayout="inline"
-              childrenContainerWidth="min"
             >
               {logPill}
-            </Field>
+            </BadgeField>
           </PanelSectionRow>
         ) : null}
       </PanelSection>

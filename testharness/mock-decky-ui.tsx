@@ -5,7 +5,8 @@ import React from "react";
  * Steam's Field takes any node as its label — the setup checklist puts a step
  * marker in front of the text, and the quick panel marks one control "restart"
  * — so the double flattens whatever it is given to text. Tests match on it
- * with a prefix selector rather than an exact one.
+ * with a prefix selector rather than an exact one. The badges BadgeField puts
+ * on the label's line are not its name, and are left out.
  */
 function labelText(label: any): string | undefined {
   if (typeof label === "string") return label.trim() || undefined;
@@ -14,6 +15,7 @@ function labelText(label: any): string | undefined {
     const parts = label.map(labelText).filter(Boolean);
     return parts.length ? parts.join(" ") : undefined;
   }
+  if (label && typeof label === "object" && label.props?.["data-badges"]) return undefined;
   if (label && typeof label === "object" && label.props) return labelText(label.props.children);
   return undefined;
 }

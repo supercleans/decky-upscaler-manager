@@ -31,7 +31,7 @@ import type {
   PdPluginStatus,
   WikiStatus,
 } from "../types";
-import { Centered, KeyValue, Mono, Notice, Pill } from "./Common";
+import { BadgeField, Centered, KeyValue, Mono, Notice, Pill } from "./Common";
 import { ChannelVersions } from "./ChannelVersions";
 import { PdPluginGuide } from "./PdPluginGuide";
 import { HelixsrGuide } from "./UpscalerPanel";
@@ -291,19 +291,17 @@ export function SettingsTab({ status }: Readonly<{ status: PayloadStatus | null 
         ) : (
           stored.map((question) => (
             <PanelSectionRow key={question.key}>
-              <Field
+              <BadgeField
                 label={question.title}
                 description={question.describe(answers[question.key])}
                 onClick={() => void forgetOne(question.key)}
                 onActivate={() => void forgetOne(question.key)}
                 focusable={!busy}
                 bottomSeparator="standard"
-                childrenLayout="inline"
-                childrenContainerWidth="min"
                 {...({ "data-forget": question.key } as Record<string, string>)}
               >
                 <Pill>다시 묻기</Pill>
-              </Field>
+              </BadgeField>
             </PanelSectionRow>
           ))
         )}

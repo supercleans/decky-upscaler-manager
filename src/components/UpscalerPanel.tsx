@@ -1,4 +1,4 @@
-import { ButtonItem, ConfirmModal, Field, PanelSection, PanelSectionRow, showModal } from "@decky/ui";
+import { ButtonItem, ConfirmModal, PanelSection, PanelSectionRow, showModal } from "@decky/ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { buildHlxDlss, cancelHlxDlssBuild, getHlxDlssBuild } from "../api";
 import type {
@@ -9,7 +9,7 @@ import type {
   HlxBuildStatus,
   Upscaler,
 } from "../types";
-import { Mono, Notice, Pill } from "./Common";
+import { BadgeField, Mono, Notice, Pill } from "./Common";
 
 /** How an upscaler gets into a game: OptiScaler's nightly, HelixSR Scaler, or a drop-in. */
 export type UpscalerMethod = "nightly" | "scaler" | "dropin";
@@ -182,7 +182,7 @@ export function UpscalerPanel({
         const simpler = !reason && method === "dropin" && optiscalerNeeds.length > 0;
         return (
           <PanelSectionRow key={upscaler}>
-            <Field
+            <BadgeField
               label={
                 <span>
                   <span style={{ opacity: chosen ? 1 : 0.45, marginRight: "8px" }}>
@@ -196,15 +196,13 @@ export function UpscalerPanel({
               onActivate={() => onSelect(upscaler)}
               focusable
               bottomSeparator="standard"
-              childrenLayout="inline"
-              childrenContainerWidth="min"
               {...({ "data-upscaler": upscaler } as Record<string, string>)}
             >
               {current === upscaler ? <Pill color="#2f6b3f">적용됨</Pill> : null}
               {upscaler === recommended && gpu?.device ? <Pill color="#3a6ea5">추천</Pill> : null}
               {simpler ? <Pill color="#2b6f6a">간단</Pill> : null}
               {reason ? <Pill>불가</Pill> : <Pill>{METHOD_LABEL[method]}</Pill>}
-            </Field>
+            </BadgeField>
           </PanelSectionRow>
         );
       })}

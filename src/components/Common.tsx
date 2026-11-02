@@ -1,4 +1,5 @@
 import { Field, Focusable, PanelSectionRow } from "@decky/ui";
+import type { FieldProps } from "@decky/ui";
 import type { ReactNode } from "react";
 
 type NoticeTone = "info" | "warn" | "error" | "success";
@@ -85,6 +86,32 @@ export function Mono({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * A Field whose children are badges, shown beside its label.
+ *
+ * Steam's Field gives inline children a column of their own, and the
+ * description wraps in the narrow one left of it with the right side empty.
+ * Badges are not controls, so they go on the label's line and the description
+ * keeps the row's whole width.
+ */
+export function BadgeField({ label, children, ...props }: FieldProps & { children?: ReactNode }) {
+  return (
+    <Field
+      {...props}
+      label={
+        <span style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "4px 8px" }}>
+          {label}
+          {children ? (
+            <span data-badges style={{ whiteSpace: "nowrap" }}>
+              {children}
+            </span>
+          ) : null}
+        </span>
+      }
+    />
+  );
+}
+
 /** A tappable row used for lists of libraries, games and folders. */
 export function RowButton({
   onClick,
@@ -101,18 +128,16 @@ export function RowButton({
 }) {
   return (
     <PanelSectionRow>
-      <Field
+      <BadgeField
         label={label}
         description={description}
         onClick={disabled ? undefined : onClick}
         onActivate={disabled ? undefined : onClick}
         focusable={!disabled}
         bottomSeparator="standard"
-        childrenLayout="inline"
-        childrenContainerWidth="min"
       >
         {right}
-      </Field>
+      </BadgeField>
     </PanelSectionRow>
   );
 }

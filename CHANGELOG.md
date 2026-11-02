@@ -7,6 +7,14 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+### Fixed
+
+- **Descriptions use the row's whole width.** A row's badges (applied,
+  recommended, done, and the like) took a column of their own on the right,
+  and the description wrapped in the narrow one left of it with the right
+  side empty: in the upscaler list, the setup steps, the game list and
+  Settings. The badges now sit beside the row's name.
+
 ## [0.2.3] - 2026-11-02
 
 ### Removed

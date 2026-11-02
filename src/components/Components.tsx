@@ -12,7 +12,7 @@ import { useState } from "react";
 import { removeDownloads, startSetup, updateComponent } from "../api";
 import { publishComponents, useComponents } from "../hooks/useComponents";
 import type { Channel, ComponentChannel, HlxBuildStatus, JobStatus, JobStep } from "../types";
-import { Centered, KeyValue, Mono, Notice, Pill } from "./Common";
+import { BadgeField, Centered, KeyValue, Mono, Notice, Pill } from "./Common";
 import { HlxBuildConsent } from "./UpscalerPanel";
 
 const CHANNEL_LABEL: Record<Channel, string> = {
@@ -74,19 +74,17 @@ export function JobSteps({ job, build }: Readonly<{ job: JobStatus; build: HlxBu
           : step.detail;
         return (
           <PanelSectionRow key={step.key}>
-            <Field
+            <BadgeField
               label={step.label}
               description={detail ?? undefined}
               focusable
               bottomSeparator="standard"
-              childrenLayout="inline"
-              childrenContainerWidth="min"
               {...({ "data-step": step.key, "data-state": step.state } as Record<string, string>)}
             >
               <Pill color={step.state === "failed" ? "#8a3a3a" : step.state === "done" ? "#2f6b3f" : undefined}>
                 {STEP_LABEL[step.state]}
               </Pill>
-            </Field>
+            </BadgeField>
           </PanelSectionRow>
         );
       })}
@@ -295,17 +293,15 @@ export function ComponentsSection() {
         return (
           <div key={channel}>
             <PanelSectionRow>
-              <Field
+              <BadgeField
                 label={CHANNEL_LABEL[channel]}
                 description={describeChannel(channel, entry)}
                 focusable
                 bottomSeparator="standard"
-                childrenLayout="inline"
-                childrenContainerWidth="min"
                 {...({ "data-component": channel } as Record<string, string>)}
               >
                 {entry.update ? <Pill color="#3a6ea5">새 빌드</Pill> : null}
-              </Field>
+              </BadgeField>
             </PanelSectionRow>
             {desktop && entry.update ? (
               <PanelSectionRow>
