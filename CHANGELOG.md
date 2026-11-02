@@ -7,6 +7,8 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-11-02
+
 ### Fixed
 
 - **Six games of the compatibility list were missing.** Their rows were
