@@ -7,6 +7,8 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-02
+
 ### Removed
 
 - **lsfg-vk.** Its install, updates, per-game frame generation, live
