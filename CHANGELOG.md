@@ -7,6 +7,8 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-11-02
+
 ### Fixed
 
 - **Descriptions use the row's whole width.** A row's badges (applied,
