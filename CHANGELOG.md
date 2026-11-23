@@ -7,6 +7,8 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-23
+
 ### Added
 
 - **HLX FSR 4 Full**, an upscaler of its own: AMD's full FSR 4.1.2 network
