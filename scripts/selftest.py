@@ -2233,6 +2233,11 @@ def check_nightly():
           picked and picked["tag"] == "nightly-20990101", picked)
     check("version and date are read out of the asset name",
           picked and (picked["version"], picked["date"]) == ("10.0.0-pre1", "20990101"), picked)
+    hashed = nightly.pick_release([
+        release("nightly-20990103", "OptiScaler_v10.0.0-pre1_20990103_ab1f3d49.7z"), newest])
+    check("a name with the commit after the date is a nightly too",
+          hashed and (hashed["tag"], hashed["version"], hashed["date"])
+          == ("nightly-20990103", "10.0.0-pre1", "20990103"), hashed)
 
     real_json, real_download = wiki_mod.download_json, wiki_mod.download
     calls = {"api": 0, "download": 0}
@@ -4113,15 +4118,19 @@ def check_option_validation():
 
     # Everything else keeps the closed-set treatment: these lists are the
     # backends OptiScaler has, not a snapshot of one runtime's answer.
-    dx11 = SCHEMA[("Upscalers", "Dx11Upscaler")]
-    check("a real backend id is accepted", valid(dx11, "ffx_12"))
-    check("an id OptiScaler does not have is not", not valid(dx11, "ffx"))
-    # Dx12 and Vulkan also take a custom upscaler, by its folder's name: any name
-    # is one, but a path is not.
-    dx12 = SCHEMA[("Upscalers", "Dx12Upscaler")]
-    check("Dx12Upscaler takes a backend id or a custom upscaler's folder name",
-          valid(dx12, "ffx") and valid(dx12, "cyboman-4.1.2l-lossy"))
-    check("but not a path", not valid(dx12, "custom/x") and not valid(dx12, "..\\x"))
+    fg_input = SCHEMA[("FrameGen", "FGInput")]
+    check("a real backend id is accepted", valid(fg_input, "xefg"))
+    check("an id OptiScaler does not have is not", not valid(fg_input, "ffx"))
+    # The upscaler keys also take a custom upscaler, by its folder's name: any
+    # name is one, but a path is not. DX11 joined DX12 and Vulkan in the nightly
+    # of 2026-11-17, which also reworded the ini's note the generator reads.
+    for key in ("Dx11Upscaler", "Dx12Upscaler", "VulkanUpscaler"):
+        entry = SCHEMA[("Upscalers", key)]
+        check(f"{key} takes a backend id or a custom upscaler's folder name",
+              valid(entry, "ffx_12" if key != "Dx12Upscaler" else "ffx")
+              and valid(entry, "cyboman-4.1.2l-lossy"))
+        check(f"but not a path ({key})",
+              not valid(entry, "custom/x") and not valid(entry, "..\\x"))
 
     # The FSR 4 Lite preset goes into every install, so every key in it has to
     # be one this schema knows with a value it accepts - or an install would

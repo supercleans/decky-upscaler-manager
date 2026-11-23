@@ -29,7 +29,8 @@ OPTIONS = [
             "fsr21_12": "fsr21_12 \u2014 dx11on12",
             "fsr22_12": "fsr22_12 \u2014 dx11on12",
             "ffx_12": "ffx_12 \u2014 FSR 2.3; 3.1; 4.x"
-        }
+        },
+        "custom": true
     },
     {
         "section": "Upscalers",
@@ -77,6 +78,22 @@ OPTIONS = [
         "custom": true
     },
     {
+        "section": "Upscalers",
+        "key": "RRUpscaler",
+        "label": "RR Upscaler",
+        "description": "DLSSD for the game's ray reconstruction (DX12 and Vulkan, DLSS inputs only) dlssd, a custom one (a 'custom' subfolder with a dlssd folder, or one added by an ASI plugin) or a regular upscaler: xess, fsr21, fsr22, ffx, dlss (needs RRAllowRegularUpscalers, no denoising) The game's ray reconstruction option shows up when any of these can run",
+        "default": "NVIDIA's DLSSD when the gpu can run it, the first custom one otherwise",
+        "type": "string"
+    },
+    {
+        "section": "Upscalers",
+        "key": "RRAllowRegularUpscalers",
+        "label": "RR Allow Regular Upscalers",
+        "description": "Lets regular upscalers be picked for the game's ray reconstruction In most cases will cause the image to be noisy",
+        "default": "false",
+        "type": "bool"
+    },
+    {
         "section": "FrameGen",
         "key": "Enabled",
         "label": "Enabled",
@@ -105,14 +122,15 @@ OPTIONS = [
         "section": "FrameGen",
         "key": "FGOutput",
         "label": "FG Output",
-        "description": "Selected FG Output fsrfg          - requires amd_fidelityfx_dx12.dll OR amd_fidelityfx_loader_dx12.dll + amd_fidelityfx_framegeneration_dx12.dll xefg           - requires libxess_fg.dll and libxell.dll dlssg          - requires streamline dlls inside 'OptiScaler/streamline' folder + nvngx_dlssg.dll",
+        "description": "Selected FG Output fsrfg          - requires amd_fidelityfx_dx12.dll OR amd_fidelityfx_loader_dx12.dll + amd_fidelityfx_framegeneration_dx12.dll xefg           - requires libxess_fg.dll and libxell.dll dlssg          - requires streamline dlls inside 'OptiScaler/streamline' folder + nvngx_dlssg.dll flipmeter      - DX12 on AMD, requires driver flip metering and an FGNvngxReplacement",
         "default": "nofg",
         "type": "enum",
         "options": [
             "nofg",
             "fsrfg",
             "xefg",
-            "dlssg"
+            "dlssg",
+            "flipmeter"
         ]
     },
     {
@@ -137,7 +155,7 @@ OPTIONS = [
         "label": "FT Input",
         "description": "Frametime source, would affect frame pacing 0: Input (DLSSG/FSRFG/OptiFG) | 1: Time between Present calls | 2: Zero (Only for XeFG)",
         "default": "0",
-        "type": "bool"
+        "type": "string"
     },
     {
         "section": "FrameGen",
@@ -167,7 +185,7 @@ OPTIONS = [
         "section": "FrameGen",
         "key": "DisableHudless",
         "label": "Disable Hudless",
-        "description": "Control Hudless, even if FG source provides one",
+        "description": "Control Hudless, even if FG source provides one With DLSSG via Nvngx as FG Input, it might be required for some sets of [NvngxFG] DispatchFlags",
         "default": "false",
         "type": "bool"
     },
@@ -176,7 +194,7 @@ OPTIONS = [
         "key": "DisableUI",
         "label": "Disable UI",
         "description": "Control a UI texture, even if FG source provides one",
-        "default": "true",
+        "default": "false",
         "type": "bool"
     },
     {
@@ -277,7 +295,7 @@ OPTIONS = [
         "key": "SkipResizeBuffers",
         "label": "Skip Resize Buffers",
         "description": "Skip ResizeBuffers call to swapchain If old and new descriptions are the same Prevents crashes after ResizeBuffers calls",
-        "default": "true",
+        "default": "false",
         "type": "bool"
     },
     {
@@ -353,6 +371,15 @@ OPTIONS = [
         "description": "Disables AMD hardware flip metering requested by the FSR ML FG swapchain",
         "default": "false",
         "type": "bool"
+    },
+    {
+        "section": "FSRFG",
+        "key": "Provider",
+        "label": "Provider",
+        "description": "FFX frame generation and swapchain used by FSR FG",
+        "default": "the regular FFX one",
+        "type": "string",
+        "custom": true
     },
     {
         "section": "FSRFG",
@@ -546,6 +573,28 @@ OPTIONS = [
         "type": "bool"
     },
     {
+        "section": "FlipMeter",
+        "key": "InterpolationCount",
+        "label": "Interpolation Count",
+        "description": "Sets interpolated frame count (MFG) of the Flip Meter output, limited by what the FG Nvngx Replacement supports and by the driver: more than 1 needs the DWORD Gmx_DriverFramePacingMaxGenFrames in the GPU's key under HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318} and a restart",
+        "default": "1",
+        "type": "enum",
+        "options": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5"
+        ],
+        "optionLabels": {
+            "1": "2X",
+            "2": "3X",
+            "3": "4X",
+            "4": "5X",
+            "5": "6X"
+        }
+    },
+    {
         "section": "DLSSG",
         "key": "InterpolationCount",
         "label": "Interpolation Count",
@@ -652,7 +701,7 @@ OPTIONS = [
         "section": "OptiFG",
         "key": "HUDFixUIUnblend",
         "label": "HUD Fix UI Unblend",
-        "description": "Vulkan, rebuild the hudless by removing that UI texture from the frame FSR-FG only gets the UI this way, DLSSG also takes the UI texture directly",
+        "description": "Vulkan, rebuild the hudless by removing that UI texture from the frame FSR-FG only gets the UI this way. Not used with DLSSG, it takes the UI texture directly",
         "default": "true",
         "type": "bool"
     },
@@ -829,6 +878,14 @@ OPTIONS = [
         "key": "ResourceFlipOffset",
         "label": "Resource Flip Offset",
         "description": "Flip Depth & Velocity textures according to interpolation area This should fix OptiFG issues with Unity games",
+        "default": "false",
+        "type": "bool"
+    },
+    {
+        "section": "OptiFG",
+        "key": "HudlessFlip",
+        "label": "Hudless Flip",
+        "description": "Flip the HUDless texture, uses ResourceFlipOffset too Games can also request it with the Opti.Hudless.Flip NGX parameter",
         "default": "false",
         "type": "bool"
     },
@@ -1042,7 +1099,7 @@ OPTIONS = [
         "key": "CameraFar",
         "label": "Camera Far",
         "description": "Sets camera far value for FSR and FSR FG",
-        "default": "10000.0",
+        "default": "100000.0",
         "type": "float",
         "min": 0.0
     },
@@ -1707,19 +1764,11 @@ OPTIONS = [
         "type": "bool"
     },
     {
-        "section": "NvngxFG",
-        "key": "DisableHudless",
-        "label": "Disable Hudless",
-        "description": "Disable hudless resource being sent to DLSSG Might be required for some sets of DispatchFlags, see the reference",
-        "default": "false",
-        "type": "bool"
-    },
-    {
         "section": "Libraries",
         "key": "OptiDllPath",
         "label": "Opti Dll Path",
-        "description": "Main folder for OptiScaler to check dll files below",
-        "default": ".\\OptiScaler",
+        "description": "Relative paths in this section are based on OptiScaler's folder Main folder for OptiScaler to check dll files below",
+        "default": ".\\OptiScaler, or OptiScaler's folder if it doesn't exist",
         "type": "string"
     },
     {
@@ -1734,7 +1783,7 @@ OPTIONS = [
         "section": "Libraries",
         "key": "NvngxDlssPath",
         "label": "Nvngx Dlss Path",
-        "description": "nvngx_dlss.dll",
+        "description": "nvngx_dlss.dll or its folder",
         "default": "auto",
         "type": "string"
     },
@@ -1855,7 +1904,7 @@ OPTIONS = [
         "key": "OverlayMenu",
         "label": "Overlay Menu",
         "description": "Enables new Overlay ImGui menus without this option OptiScaler will disable all FG features",
-        "default": "when OptiScaler is nvngx.dll false otherwise true",
+        "default": "true",
         "type": "bool"
     },
     {
@@ -2679,7 +2728,7 @@ OPTIONS = [
         "section": "Sharpness",
         "key": "Shader",
         "label": "Shader",
-        "description": "Options are: RCAS - AMD's Robust Contrast-Adaptive Sharpening DA - Enables Depth-based edge detection for sharpening. Reduces sharpening across object boundaries to prevent halos and artifacts. The farther away is the object, the more sharpening is applied (limited to 1.0) Recommended for scenes with complex geometry or upscaling. LCDA - Local contrast version of the above DA",
+        "description": "Options are: RCAS - AMD's Robust Contrast-Adaptive Sharpening DA - Enables Depth-based edge detection for sharpening. Reduces sharpening across object boundaries to prevent halos and artifacts. The farther away is the object, the more sharpening is applied (limited to 1.0) Recommended for scenes with complex geometry or upscaling. DAS - Depth-aware directional adaptive luma sharpener. Uses the same depth rejection as DA, smarter sharpening with fewer artifacts but heavier. BABA - Small neural network sharpener ported from BaBa_Sharpen_Neural.fx (ReShade Baba). Only touches luma, skips aliased edges and fireflies. Strength 0.5 matches the Intensity 1.0 of the ReShade shader. Dx11, Dx12 & Vulkan OPTI - OptiSharpen, small neural network sharpener trained for OptiScaler. Only touches luma, same maths for SDR and HDR. Strength 0.5 is the trained strength. Dx11, Dx12 & Vulkan",
         "default": "rcas",
         "type": "string"
     },
@@ -2696,7 +2745,7 @@ OPTIONS = [
         "key": "Sharpness",
         "label": "Sharpness",
         "description": "Strength of Sharpening,",
-        "default": "0.3",
+        "default": "0.4",
         "type": "float",
         "min": 0.0,
         "max": 1.0
@@ -2768,7 +2817,7 @@ OPTIONS = [
         "key": "MotionSharpness",
         "label": "Motion Sharpness",
         "description": "Sharpening will be added or removed according to motion length",
-        "default": "0.4",
+        "default": "0.2",
         "type": "float",
         "min": -1.3,
         "max": 1.3
@@ -2805,7 +2854,7 @@ OPTIONS = [
         "section": "CAS",
         "key": "Contrast",
         "label": "Contrast",
-        "description": "Contrast based sharpening value Higher values increases sharpness at high contrast areas. High values might cause graphical GLITCHES when used with high sharpness values !!!",
+        "description": "Contrast based sharpening value Lowers sharpness at high contrast areas. High values might cause graphical GLITCHES when used with high sharpness values !!!",
         "default": "0.0",
         "type": "float",
         "min": 0.0,
@@ -2846,6 +2895,50 @@ OPTIONS = [
         "description": "Clamps the final image to the [0, 1] range. Prevents overshoot artifacts such as bright halos or negative colors. Recommended for LDR pipelines; optional for HDR depending on tone-mapping.",
         "default": "false",
         "type": "bool"
+    },
+    {
+        "section": "CAS",
+        "key": "BabaModel",
+        "label": "Baba Model",
+        "description": "Neural model used by the BABA sharpener 0 - Model A, standard sharpening 1 - Model B, edge-enhanced",
+        "default": "0",
+        "type": "string"
+    },
+    {
+        "section": "CAS",
+        "key": "BabaEdgeResponse",
+        "label": "Baba Edge Response",
+        "description": "How BABA adapts the sharpening to detected edges Negative values smooth edges, positive values enhance them, 0 is uniform",
+        "default": "0.0",
+        "type": "float",
+        "min": -1.0,
+        "max": 1.0
+    },
+    {
+        "section": "CAS",
+        "key": "BabaDebugView",
+        "label": "Baba Debug View",
+        "description": "Debug view of the BABA sharpener 0 - Normal, 1 - Sharpening map only, 2 - Residual map",
+        "default": "0",
+        "type": "string"
+    },
+    {
+        "section": "CAS",
+        "key": "OptiSharpenModel",
+        "label": "Opti Sharpen Model",
+        "description": "Neural model used by the OPTI sharpener 0 - Natural D10, natural sharpening 1 - Crisp D10 p50, stronger 2 - Natural D10 in half precision written for packed math (fp16 packed, faster on Dx12 / Vulkan) 3 - Crisp D10 p50 in half precision written for packed math (fp16 packed, faster on Dx12 / Vulkan) Each precision is its own shader. Dx11 runs the fp16 packed ones in fp32. All use a 25 tap (5x5) window and overshoot the local range by up to 15%. Each model scales the strength (Natural x0.75, Crisp x1.0), the top of the slider is its best point",
+        "default": "0",
+        "type": "int",
+        "min": 0,
+        "max": 3
+    },
+    {
+        "section": "CAS",
+        "key": "OptiSharpenDebugView",
+        "label": "Opti Sharpen Debug View",
+        "description": "Debug view of the OPTI sharpener 0 - Normal, 1 - Sharpening map, 2 - Change magnitude",
+        "default": "0",
+        "type": "string"
     },
     {
         "section": "Magnifier",
@@ -3008,7 +3101,7 @@ OPTIONS = [
         "key": "LogAsync",
         "label": "Log Async",
         "description": "Enables Async logging",
-        "default": "true",
+        "default": "false",
         "type": "bool"
     },
     {
@@ -3016,10 +3109,18 @@ OPTIONS = [
         "key": "LogAsyncThreads",
         "label": "Log Async Threads",
         "description": "Async logging threads",
-        "default": "1",
+        "default": "4",
         "type": "int",
         "min": 1,
         "max": 8
+    },
+    {
+        "section": "Log",
+        "key": "CreateDumps",
+        "label": "Create Dumps",
+        "description": "Writes a dump next to the log (or to the temp folder when it can't) on a crash or when the game ends itself with an error code. Crashes are caught before the game's own handlers, a game that handles them itself can get a dump that isn't a crash (at most 3)",
+        "default": "false",
+        "type": "bool"
     },
     {
         "section": "InitFlags",
@@ -3221,6 +3322,26 @@ OPTIONS = [
         "max": 3
     },
     {
+        "section": "V-Sync",
+        "key": "VulkanPresentMode",
+        "label": "Vulkan Present Mode",
+        "description": "Vulkan present mode override, VkPresentModeKHR value. Can be changed live from the menu. 0 = Immediate (V-Sync Off), 1 = Mailbox, 2 = FIFO (V-Sync On), 3 = FIFO Relaxed,",
+        "default": "the game's",
+        "type": "enum",
+        "options": [
+            "0",
+            "1",
+            "2",
+            "3"
+        ],
+        "optionLabels": {
+            "0": "Immediate (V-Sync Off)",
+            "1": "Mailbox",
+            "2": "FIFO (V-Sync On)",
+            "3": "FIFO Relaxed"
+        }
+    },
+    {
         "section": "Anisotropy",
         "key": "AnisotropyOverride",
         "label": "Anisotropy Override",
@@ -3326,14 +3447,6 @@ OPTIONS = [
     },
     {
         "section": "Hotfix",
-        "key": "ManualInputPolling",
-        "label": "Manual Input Polling",
-        "description": "Use manual input polling instead of hooking WndProc Might help games which does not capture inputs properly As a downside it will not be able to block inputs when menu is open",
-        "default": "false",
-        "type": "bool"
-    },
-    {
-        "section": "Hotfix",
         "key": "SimulateWaitableObject",
         "label": "Simulate Waitable Object",
         "description": "Simulate waitable object event signals for FG swapchain",
@@ -3353,7 +3466,7 @@ OPTIONS = [
         "key": "PreferDedicatedGpu",
         "label": "Prefer Dedicated Gpu",
         "description": "OptiScaler will try to force High Performance GPU",
-        "default": "false",
+        "default": "true",
         "type": "bool"
     },
     {

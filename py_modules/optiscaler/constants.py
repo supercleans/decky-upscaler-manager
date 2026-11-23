@@ -8,8 +8,9 @@ NIGHTLY_REPO = "optiscaler/OptiScaler-nightly"
 # Enough to list every build since the one a plugin build was made against.
 NIGHTLY_RELEASES_API = f"https://api.github.com/repos/{NIGHTLY_REPO}/releases?per_page=60"
 NIGHTLY_RELEASES_PAGE = f"https://github.com/{NIGHTLY_REPO}/releases"
-# The one asset a nightly release carries, e.g. OptiScaler_v10.0.0-pre1_20261027.7z.
-NIGHTLY_ASSET_RE = r"^OptiScaler_v?(?P<version>.+?)_(?P<date>\d{8})\.7z$"
+# The one asset a nightly release carries, e.g. OptiScaler_v10.0.0-pre1_20261027.7z,
+# and from 2026-11-17 with the commit after the date: ..._20261122_ab1f3d49.7z.
+NIGHTLY_ASSET_RE = r"^OptiScaler_v?(?P<version>.+?)_(?P<date>\d{8})(?:_[0-9a-f]{7,40})?\.7z$"
 # How long a downloaded nightly is used before the channel is asked again.
 
 # The newest build of each download channel when this plugin was built, written

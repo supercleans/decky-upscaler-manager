@@ -7,6 +7,24 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+### Fixed
+
+- **The OptiScaler nightly stopped at 2026-11-16.** From 2026-11-17 the
+  nightly's archive carries its commit after the date
+  (`OptiScaler_v10.0.0-pre1_20261122_ab1f3d49.7z`), which the channel did
+  not read as a nightly: installs, update notices and the version list in
+  Settings all stayed on 2026-11-16. Both forms are read now.
+
+### Changed
+
+- **The reference OptiScaler.ini is the nightly of 2026-11-22's.** Its
+  settings follow: DisableHudless and ManualInputPolling are gone, OptiSharpen
+  and Baba sharpening, ray reconstruction (RRUpscaler), the FSR FG provider,
+  Flip Meter and VulkanPresentMode are new, and Dx11Upscaler also takes a
+  custom upscaler's name. The ini words that last note differently now, and
+  the schema generator reads both wordings, so the upscaler keys still refuse
+  a path.
+
 ## [0.2.5] - 2026-11-02
 
 ### Fixed

@@ -135,10 +135,13 @@ def find_numeric_choices(comments):
     return None
 
 
-# "or the name of a folder in the 'custom' folder": the key also takes a custom
-# upscaler, by the name of its folder under OptiScaler/custom. Not a value
-# spec of its own, and it can come last, where the spec is read from.
-CUSTOM_RE = re.compile(r"name of a folder in the .custom. folder", re.I)
+# "or the name of a folder in the 'custom' folder", and from the nightly of
+# 2026-11-17 "or the name of a custom upscaler: ..." / "a custom FG with ...":
+# the key also takes a custom upscaler, by the name of its folder under
+# OptiScaler/custom. Not a value spec of its own, and it can come last, where
+# the spec is read from.
+CUSTOM_RE = re.compile(
+    r"name of a (folder in the .custom. folder|custom (upscaler|fg)\b)", re.I)
 # "Custom upscalers use UpscalerIndex in a section named after their folder":
 # a note about other sections, which would otherwise be read as this key's spec.
 CUSTOM_NOTE_RE = re.compile(r"^custom upscalers use\b", re.I)
