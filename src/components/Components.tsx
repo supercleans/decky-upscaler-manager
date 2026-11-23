@@ -48,7 +48,7 @@ function SetupConsent({
         OptiScaler nightly와 cyboman의 FSR 4.1.2 Lite 빌드를 받습니다.{" "}
         {desktop
           ? "HelixSR는 HelixSR Desktop이 설정해 둔 것을 씁니다."
-          : "HLX FSR 4를 쓰도록 HelixSR 공식 릴리스도 받습니다."}{" "}
+          : "HLX FSR 4와 HLX FSR 4 Full을 쓰도록 HelixSR 공식 릴리스도 받습니다."}{" "}
         {dlss ? (
           <>
             그리고 HelixSR 공식 설정 스크립트로 이 기기에서 HLX DLSS를 빌드합니다. 빌드에는 NVIDIA의
@@ -199,7 +199,7 @@ export function ComponentNotice() {
       {missing ? (
         <PanelSectionRow>
           <Notice tone="warn" title="HelixSR Desktop의 HelixSR가 없어졌습니다">
-            HLX FSR 4와 HLX DLSS를 쓰려면 설정 탭에서 플러그인으로 HelixSR를 설치하세요.
+            HLX FSR 4, HLX FSR 4 Full, HLX DLSS를 쓰려면 설정 탭에서 플러그인으로 HelixSR를 설치하세요.
           </Notice>
         </PanelSectionRow>
       ) : null}

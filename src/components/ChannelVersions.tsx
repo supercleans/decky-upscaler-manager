@@ -19,7 +19,7 @@ const CHANNELS: { channel: Channel; label: string; about: string }[] = [
   {
     channel: "helixsr",
     label: "HelixSR (HLX FSR 4)",
-    about: "HLX FSR 4를 받아 오는 HelixSR 릴리스. 3.2.0부터 미리 빌드된 HLX FSR 4가 들어 있습니다.",
+    about: "HLX FSR 4를 받아 오는 HelixSR 릴리스. 3.2.0부터 미리 빌드된 HLX FSR 4가, 3.3.0부터 HLX FSR 4의 Vulkan 빌드와 HLX FSR 4 Full이 들어 있습니다.",
   },
 ];
 

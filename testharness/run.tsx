@@ -889,8 +889,8 @@ async function render(name: string, element: React.ReactElement) {
 
     const up = await render("GameDetail (upscaler list, no HelixSR)", view());
     const rows = findAll(up.host, "[data-upscaler]").map((n) => n.getAttribute("data-upscaler"));
-    console.log(`  the five upscalers are listed: ${
-      rows.join(",") === "fsr4-lite,fsr412l-exact,fsr412l-lossy,hlx-fsr4,hlx-dlss"}`);
+    console.log(`  the six upscalers are listed: ${
+      rows.join(",") === "fsr4-lite,fsr412l-exact,fsr412l-lossy,hlx-fsr4,hlx-fsr4-full,hlx-dlss"}`);
     console.log(`  without FSR 3.1, FSR 4 Lite goes in through OptiScaler: ${
       findAll(up.host, '[data-upscaler="fsr4-lite"]')[0]?.textContent!.includes("OptiScaler")}`);
     console.log(`  FSR 4 Lite is picked by default: ${
@@ -925,15 +925,19 @@ async function render(name: string, element: React.ReactElement) {
       const hlxRow = findAll(bc.host, '[data-upscaler="hlx-fsr4"]')[0];
       console.log(`  on a BC-250 HLX FSR 4 is picked first, and marked recommended: ${
         hlxRow?.textContent!.includes("●") && hlxRow.textContent!.includes("추천")}`);
-      console.log(`  and only HelixSR's two are offered there: ${
+      console.log(`  and only HelixSR's are offered there: ${
         findAll(bc.host, "[data-upscaler]").map((n) => n.getAttribute("data-upscaler")).join(",")
-          === "hlx-fsr4,hlx-dlss"}`);
+          === "hlx-fsr4,hlx-fsr4-full,hlx-dlss"}`);
       fixtures.get_game = deckGame;
     }
     // HLX FSR 4 is downloaded: no HelixSR set-up needed, OptiScaler without FSR 3.1.
     const hlxRow = findAll(up.host, '[data-upscaler="hlx-fsr4"]')[0];
     console.log(`  HLX FSR 4 needs no HelixSR set-up, and goes in through OptiScaler here: ${
       hlxRow?.textContent!.includes("OptiScaler") && !hlxRow.textContent!.includes("불가")}`);
+    const fullRow = findAll(up.host, '[data-upscaler="hlx-fsr4-full"]')[0];
+    console.log(`  so does HLX FSR 4 Full, which says it is the full network and slower: ${
+      fullRow?.textContent!.includes("OptiScaler") && !fullRow.textContent!.includes("불가")
+      && fullRow.textContent!.includes("원래 크기") && fullRow.textContent!.includes("느립니다")}`);
     await pick(up.host, "hlx-dlss");
     const noHelix = up.host.textContent!;
     console.log(`  picking HLX DLSS unbuilt offers to build it here, HelixSR Desktop's build used first: ${

@@ -128,6 +128,18 @@ HELIXSR_HLX_DIR = "HLX-FSR4"
 # HLXFSR4D. Copied straight out of the ZIP, neither has one and neither runs.
 HELIXSR_NET_TRAILERS = (b"HXSRNET1", b"HXSRFG01")
 HELIXSR_HLX_TRAILER = b"HLXFSR4D"
+# Two more FidelityFX upscalers ship built in HelixSR Scaler's folder of the
+# release (3.3.0 on), as the Scaler's own custom upscalers: HLX FSR 4 for
+# Vulkan, and HLX FSR 4 Full, AMD's full FSR 4.1.2 network with its own runtime
+# (no AMD DLL behind it). Their 24-byte trailers start with these; the digit
+# after HLXFULL is the format's, which may move on.
+FFX_UPSCALER_VK_FILE = "amd_fidelityfx_upscaler_vk.dll"
+HELIXSR_HLX_VK_FILE = (f"{HELIXSR_SCALER_DIR}/{OPTI_DIR}/{CUSTOM_UPSCALER_DIR}/HLX FSR 4/ffx_vk/"
+                       f"{FFX_UPSCALER_VK_FILE}")
+HELIXSR_HLX_FULL_FILE = (f"{HELIXSR_SCALER_DIR}/{OPTI_DIR}/{CUSTOM_UPSCALER_DIR}/HLX FSR 4 Full/ffx/"
+                         f"{FFX_UPSCALER_FILE}")
+HELIXSR_HLX_VK_TRAILER = b"HLXFSR4V"
+HELIXSR_HLX_FULL_TRAILER = b"HLXFULL"
 # What HelixSR Desktop (or HelixSR Scaler's own setup) leaves in a game it
 # installed into: such a game is that app's to update and remove, not ours.
 HELIXSR_FOREIGN_MARKERS = ["HelixSR-Scaler.files", f"{HELIXSR_DIR}/helixsr-install.json"]
@@ -167,9 +179,10 @@ UPSCALER_FSR4_LITE = "fsr4-lite"      # nightly's AMD FSR 4.1.2: drop-in with FS
 UPSCALER_LITE_EXACT = "fsr412l-exact" # cyboman: drop-in with FSR 3.1, else in OptiScaler (custom)
 UPSCALER_LITE_LOSSY = "fsr412l-lossy" # likewise
 UPSCALER_HLX_FSR4 = "hlx-fsr4"        # HelixSR's release: likewise
+UPSCALER_HLX_FSR4_FULL = "hlx-fsr4-full"  # HelixSR's release, full FSR 4 network: likewise
 UPSCALER_HLX_DLSS = "hlx-dlss"        # HelixSR Scaler, from the user's HelixSR set-up
 UPSCALERS = [UPSCALER_FSR4_LITE, UPSCALER_LITE_EXACT, UPSCALER_LITE_LOSSY,
-             UPSCALER_HLX_FSR4, UPSCALER_HLX_DLSS]
+             UPSCALER_HLX_FSR4, UPSCALER_HLX_FSR4_FULL, UPSCALER_HLX_DLSS]
 DEFAULT_UPSCALER = UPSCALER_FSR4_LITE
 # Where another one is the better start (sysinfo.gpu_info()["device"]). The
 # BC-250 is not given FSR 4 by OptiScaler, and runs int8 slowly; HLX FSR 4
@@ -177,8 +190,8 @@ DEFAULT_UPSCALER = UPSCALER_FSR4_LITE
 DEVICE_UPSCALERS = {"bc250": UPSCALER_HLX_FSR4}
 # And where only some can be picked at all: on the BC-250, AMD's FSR 4 and
 # cyboman's builds of it are left to OptiScaler's own GPU check, which turns
-# that GPU down, so only HelixSR's two.
-DEVICE_ALLOWED_UPSCALERS = {"bc250": [UPSCALER_HLX_FSR4, UPSCALER_HLX_DLSS]}
+# that GPU down, so only HelixSR's.
+DEVICE_ALLOWED_UPSCALERS = {"bc250": [UPSCALER_HLX_FSR4, UPSCALER_HLX_FSR4_FULL, UPSCALER_HLX_DLSS]}
 # cyboman's archive folder for each of its upscalers.
 CYBOMAN_VARIANTS = {UPSCALER_LITE_EXACT: CYBOMAN_LITE_EXACT, UPSCALER_LITE_LOSSY: CYBOMAN_LITE_LOSSY}
 # The FidelityFX upscaler builds an OptiScaler install carries besides AMD's,
@@ -188,13 +201,22 @@ CYBOMAN_VARIANTS = {UPSCALER_LITE_EXACT: CYBOMAN_LITE_EXACT, UPSCALER_LITE_LOSSY
 # upscaler instead, since DX11 and Vulkan games reach FFX only through the DX12
 # interop backends (ffx_12), which cannot name a custom one; AMD's own then
 # moves into the custom folder (CUSTOM_AMD_NAME).
+#
+# HLX FSR 4 also has a Vulkan build, which goes beside its DX12 one in its
+# custom folder (ffx_vk): a game with HLX FSR 4 picked has VulkanUpscaler name
+# it, so Vulkan games run it natively instead of through ffx_12's interop.
 CYBOMAN_CUSTOM_NAMES = {upscaler: f"cyboman-{variant}" for upscaler, variant in CYBOMAN_VARIANTS.items()}
-CUSTOM_UPSCALER_NAMES = {**CYBOMAN_CUSTOM_NAMES, UPSCALER_HLX_FSR4: "hlx-fsr4"}
+CUSTOM_UPSCALER_NAMES = {**CYBOMAN_CUSTOM_NAMES, UPSCALER_HLX_FSR4: "hlx-fsr4",
+                         UPSCALER_HLX_FSR4_FULL: "hlx-fsr4-full"}
 CUSTOM_AMD_NAME = "amd-fsr4"
-# The drop-in variant each drop-in upscaler installs.
+CUSTOM_VK_DIR = "ffx_vk"
+# The drop-in variant each drop-in upscaler installs. HLX FSR 4 Full carries
+# its own runtime, so it goes in as cyboman's builds do, not as HLX FSR 4.
 DROPIN_VARIANT_HLX = "hlx"
+DROPIN_VARIANT_HLX_FULL = "hlx-full"
 DROPIN_VARIANT_AMD = "amd"
 DROPIN_VARIANTS = {**CYBOMAN_VARIANTS, UPSCALER_HLX_FSR4: DROPIN_VARIANT_HLX,
+                   UPSCALER_HLX_FSR4_FULL: DROPIN_VARIANT_HLX_FULL,
                    UPSCALER_FSR4_LITE: DROPIN_VARIANT_AMD}
 # Which OptiScaler build an install uses: the nightly, or HelixSR Scaler.
 ENGINE_NIGHTLY = "nightly"

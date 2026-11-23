@@ -11,7 +11,9 @@ Desktop has not built it already. HelixSR's licence lets it be used
 unmodified; nothing of it ships with this plugin.
 
 HLX FSR 4 goes into a game as a drop-in where the game has FSR 3.1, and
-otherwise through OptiScaler (see installer.install).
+otherwise through OptiScaler (see installer.install). So does HLX FSR 4 Full,
+which ships built in HelixSR Scaler's folder of the release, as does HLX FSR
+4's Vulkan build; both are taken from there.
 """
 
 import os
@@ -27,6 +29,8 @@ from .constants import (
     HELIXSR_DIR,
     HELIXSR_DLL,
     HELIXSR_HLX_DIR,
+    HELIXSR_HLX_FULL_FILE,
+    HELIXSR_HLX_VK_FILE,
     HELIXSR_PREBUILT_HLX,
     HELIXSR_RELEASES_API,
     HELIXSR_REPO,
@@ -78,6 +82,16 @@ def releases():
 def hlx_file(release_dir):
     """HLX FSR 4 in an unpacked release."""
     return Path(release_dir) / HELIXSR_HLX_DIR / FFX_UPSCALER_FILE
+
+
+def hlx_vk_file(release_dir):
+    """HLX FSR 4's Vulkan build in an unpacked release (HelixSR Scaler's, 3.3.0 on)."""
+    return Path(release_dir) / HELIXSR_HLX_VK_FILE
+
+
+def hlx_full_file(release_dir):
+    """HLX FSR 4 Full in an unpacked release (HelixSR Scaler's, 3.3.0 on)."""
+    return Path(release_dir) / HELIXSR_HLX_FULL_FILE
 
 
 def _cached(cache, tag):

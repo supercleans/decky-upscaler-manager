@@ -44,6 +44,7 @@ from .constants import (
     UPSCALER_FSR4_LITE,
     UPSCALER_HLX_DLSS,
     UPSCALER_HLX_FSR4,
+    UPSCALER_HLX_FSR4_FULL,
     UPSCALER_LITE_LOSSY,
     UPDATE_CHECK_TTL,
     UPSCALERS,
@@ -998,13 +999,14 @@ class OptiScalerService:
         for upscaler, name in CUSTOM_UPSCALER_NAMES.items():
             if upscaler not in allowed:
                 continue
+            variant = DROPIN_VARIANTS[upscaler]
             try:
                 if upscaler in CYBOMAN_VARIANTS:
-                    variant = CYBOMAN_VARIANTS[upscaler]
                     source, tag = await self._run(dropin.fetch, self.dropin_cache(), self.log,
                                                   variant, self.target_tag("dropin"))
+                elif upscaler == UPSCALER_HLX_FSR4_FULL:
+                    source, tag = await self._run(self._hlx_fsr4_full, upscaler == picked)
                 else:
-                    variant = DROPIN_VARIANTS[upscaler]
                     source, tag = await self._run(self._hlx_fsr4)
             except Exception as exc:
                 if upscaler == picked:
@@ -1012,8 +1014,16 @@ class OptiScalerService:
                 self.log.warning("custom upscaler %s left out: %s", name, exc)
                 errors.append({"upscaler": upscaler, "error": str(exc)})
                 continue
-            found.append({"path": str(source), "name": name, "variant": variant, "tag": tag,
-                          "main": upscaler == picked})
+            entry = {"path": str(source), "name": name, "variant": variant, "tag": tag,
+                     "main": upscaler == picked}
+            if upscaler == UPSCALER_HLX_FSR4:
+                # Its Vulkan build where the release has one; without it Vulkan
+                # games run HLX FSR 4 through ffx_12 as before.
+                try:
+                    entry["vk_path"] = str((await self._run(self._hlx_fsr4_vk))[0])
+                except Exception as exc:
+                    self.log.info("HLX FSR 4 for Vulkan left out: %s", exc)
+            found.append(entry)
         if any(entry["main"] for entry in found):
             found.append({"path": str(Path(payload_root) / FFX_UPSCALER_DLL), "name": CUSTOM_AMD_NAME,
                           "variant": DROPIN_VARIANTS[UPSCALER_FSR4_LITE],
@@ -1522,20 +1532,45 @@ class OptiScalerService:
         """Where HelixSR's releases are unpacked, shared by every game."""
         return self.runtime_dir / "helixsr"
 
-    def _hlx_fsr4(self):
-        """HLX FSR 4: (dll, tag).
+    def _hlx_part(self, locate, built, label, download=True):
+        """One of HelixSR's built DLLs: (dll, tag).
 
-        HelixSR Desktop's, when that app has set HelixSR up here; otherwise
-        that of the HelixSR release the plugin downloaded (or the one pinned).
-        Releases no longer in use go once it is there; see hlx.prune.
+        HelixSR Desktop's, when that app has set HelixSR up here and its
+        version has the DLL; otherwise that of the HelixSR release the plugin
+        downloaded (or the one pinned). ``download`` False leaves it at that
+        when HelixSR Desktop's lacks it: a DLL nobody picked is not worth a
+        release of a few hundred MB. Releases no longer in use go once it is
+        there; see hlx.prune.
         """
         desktop = self.helixsr_desktop()
         if desktop:
-            return hlx.hlx_file(desktop["root"]), helixsr.tag(desktop)
-        dll, tag = hlx.fetch(self.helixsr_cache(), self.log, self.target_tag("helixsr"))
+            dll = locate(desktop["root"])
+            if built(dll):
+                return dll, helixsr.tag(desktop)
+            if not download:
+                raise FileNotFoundError(f"HelixSR Desktop의 HelixSR {desktop.get('version')}에는 "
+                                        f"{label}가 없습니다")
+        folder, tag = hlx.fetch_release(self.helixsr_cache(), self.log, self.target_tag("helixsr"))
         building = self.hlx_build.status()["tag"] if self.hlx_build.running else None
         hlx.prune(self.helixsr_cache(), {tag, building} - {None})
+        dll = locate(folder)
+        if not built(dll):
+            raise FileNotFoundError(f"HelixSR {tag}에는 {label}가 없습니다")
         return dll, tag
+
+    def _hlx_fsr4(self):
+        """HLX FSR 4: (dll, tag)."""
+        return self._hlx_part(hlx.hlx_file, helixsr.hlx_built, "HLX FSR 4")
+
+    def _hlx_fsr4_vk(self):
+        """HLX FSR 4's Vulkan build: (dll, tag); never downloaded for itself."""
+        return self._hlx_part(hlx.hlx_vk_file, helixsr.hlx_vk_built, "HLX FSR 4 Vulkan 빌드",
+                              download=False)
+
+    def _hlx_fsr4_full(self, download=True):
+        """HLX FSR 4 Full: (dll, tag)."""
+        return self._hlx_part(hlx.hlx_full_file, helixsr.hlx_full_built, "HLX FSR 4 Full",
+                              download=download)
 
     def _build_hlx_in(self, folder, tag):
         """Build HLX DLSS in an unpacked release (``hlx_build`` begun); raise when it is not.
@@ -1867,9 +1902,9 @@ class OptiScalerService:
     async def install_dropin(self, game_path, upscaler=UPSCALER_LITE_LOSSY):
         """Swap the game's FSR 3.1 DLL for an FSR 4 drop-in, keeping the original.
 
-        ``upscaler`` is one of cyboman's FSR 4.1.2 Lite builds or HLX FSR 4,
-        downloaded; or FSR 4 Lite, AMD's FSR 4.1.2 file from the OptiScaler
-        nightly, as a test.
+        ``upscaler`` is one of cyboman's FSR 4.1.2 Lite builds, HLX FSR 4 or
+        HLX FSR 4 Full, downloaded; or FSR 4 Lite, AMD's FSR 4.1.2 file from
+        the OptiScaler nightly, as a test.
         """
         try:
             variant = DROPIN_VARIANTS.get(upscaler)
@@ -1895,8 +1930,13 @@ class OptiScalerService:
                 payload_root = await self.ensure_payload()
                 source, tag = Path(payload_root) / FFX_UPSCALER_DLL, self.release()["tag"]
             else:
-                source, tag = await self._run(dropin.fetch, self.dropin_cache(), self.log, variant,
-                                              self.target_tag("dropin"))
+                # cyboman's builds and HLX FSR 4 Full: an upscaler file of their
+                # own, which a monolithic game takes with AMD's loader beside it.
+                if upscaler == UPSCALER_HLX_FSR4_FULL:
+                    source, tag = await self._run(self._hlx_fsr4_full)
+                else:
+                    source, tag = await self._run(dropin.fetch, self.dropin_cache(), self.log,
+                                                  variant, self.target_tag("dropin"))
                 if state["layout"] == "monolithic":
                     payload_root = await self.ensure_payload()
             async with self._mutation_lock:

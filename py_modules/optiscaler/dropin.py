@@ -21,6 +21,9 @@ one goes in the way HelixSR's own drop-in does: under the game's file name,
 with the game's file kept beside it as ``*.original.dll``, which it hands what
 it does not cover itself.
 
+Or it is HLX FSR 4 Full ("hlx-full"), AMD's full FSR 4.1.2 network with a
+runtime of its own: no AMD file behind it, so it goes in as cyboman's builds do.
+
 Everything put down is recorded in a manifest of its own beside the game's
 FidelityFX files, every file it replaces is moved into the backup folder, and
 removing it puts them back - the same contract as an OptiScaler install.
@@ -43,6 +46,7 @@ from .constants import (
     DROPIN_RELEASES_PAGE,
     DROPIN_REPO,
     DROPIN_VARIANT_HLX,
+    DROPIN_VARIANT_HLX_FULL,
     FFX_DX12_DLL,
     FFX_FRAMEGEN_FILE,
     FFX_LOADER_FILE,
@@ -352,7 +356,7 @@ def uninstall(game_path, logger=None):
             restored.append(name)
             if logger:
                 logger.info("drop-in: restored %s", name)
-    if manifest.get("variant") == DROPIN_VARIANT_HLX:
+    if manifest.get("variant") in (DROPIN_VARIANT_HLX, DROPIN_VARIANT_HLX_FULL):
         for name in HLX_RUNTIME_FILES:
             if (target / name).is_file():
                 (target / name).unlink()

@@ -29,7 +29,11 @@ export const UPSCALER_INFO: Record<Upscaler, { label: string; about: string }> =
   },
   "hlx-fsr4": {
     label: "HLX FSR 4",
-    about: "HelixSR가 자체 파이프라인으로 돌리는 AMD FSR 4 신경망. HelixSR 공식 릴리스에서 받습니다. FSR 3.1이 있는 게임은 드롭인, 없는 게임은 OptiScaler로 넣습니다.",
+    about: "HelixSR가 자체 파이프라인으로 돌리는 AMD FSR 4.1.2 Lite 신경망. HelixSR 공식 릴리스에서 받습니다. FSR 3.1이 있는 게임은 드롭인, 없는 게임은 OptiScaler로 넣고, Vulkan 게임은 HLX FSR 4의 Vulkan 빌드로 직접 돌립니다.",
+  },
+  "hlx-fsr4-full": {
+    label: "HLX FSR 4 Full",
+    about: "HelixSR가 돌리는 AMD FSR 4.1.2의 원래 크기(Full) 신경망. Lite보다 화질이 좋고 느립니다(BC-250에서 HLX FSR 4의 약 2배 시간, Steam Deck 측정 없음). HelixSR 공식 릴리스에서 받습니다. FSR 3.1이 있는 게임은 드롭인, 없는 게임은 OptiScaler로 넣습니다.",
   },
   "hlx-dlss": {
     label: "HLX DLSS",
@@ -42,15 +46,17 @@ export const UPSCALER_ORDER: Upscaler[] = [
   "fsr412l-exact",
   "fsr412l-lossy",
   "hlx-fsr4",
+  "hlx-fsr4-full",
   "hlx-dlss",
 ];
 
 /**
- * cyboman's builds and HLX FSR 4: one FidelityFX upscaler DLL each, downloaded,
- * as a drop-in or as an OptiScaler custom upscaler.
+ * cyboman's builds and HLX FSR 4 (Full too): one FidelityFX upscaler DLL each,
+ * downloaded, as a drop-in or as an OptiScaler custom upscaler.
  */
 export function isCustom(upscaler: Upscaler | null | undefined) {
-  return upscaler === "fsr412l-exact" || upscaler === "fsr412l-lossy" || upscaler === "hlx-fsr4";
+  return upscaler === "fsr412l-exact" || upscaler === "fsr412l-lossy"
+    || upscaler === "hlx-fsr4" || upscaler === "hlx-fsr4-full";
 }
 
 /**
@@ -88,12 +94,12 @@ export function upscalerMethod(upscaler: Upscaler, dropinPossible: boolean): Ups
 }
 
 /**
- * The upscalers this machine may pick. On the BC-250 only HelixSR's two: AMD's
+ * The upscalers this machine may pick. On the BC-250 only HelixSR's: AMD's
  * FSR 4 and cyboman's builds of it are left to OptiScaler's GPU check, which
  * turns that GPU down. The backend refuses the rest the same way.
  */
 export function allowedUpscalers(gpu: GpuInfo | null | undefined): Upscaler[] {
-  return gpu?.device === "bc250" ? ["hlx-fsr4", "hlx-dlss"] : UPSCALER_ORDER;
+  return gpu?.device === "bc250" ? ["hlx-fsr4", "hlx-fsr4-full", "hlx-dlss"] : UPSCALER_ORDER;
 }
 
 /** Why this upscaler cannot go into this game now; null when it can. */
@@ -103,7 +109,7 @@ export function upscalerBlocker(
   gpu?: GpuInfo | null
 ): string | null {
   if (!allowedUpscalers(gpu).includes(upscaler)) {
-    return "BC-250에서는 HLX FSR 4와 HLX DLSS만 쓸 수 있습니다.";
+    return "BC-250에서는 HelixSR의 업스케일러(HLX FSR 4, HLX FSR 4 Full, HLX DLSS)만 쓸 수 있습니다.";
   }
   if (upscaler !== "hlx-dlss") return null;
   return helixsr?.dlss_ready ? null : "HLX DLSS가 아직 빌드되지 않았습니다. 아래에서 빌드하세요.";

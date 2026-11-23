@@ -7,6 +7,22 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+### Added
+
+- **HLX FSR 4 Full**, an upscaler of its own: AMD's full FSR 4.1.2 network
+  with HelixSR's runtime, sharper than Lite and slower (about twice HLX FSR
+  4's time on a BC-250; no Steam Deck figures yet). It ships built in
+  HelixSR Scaler's folder of the release from 3.3.0 and is taken from there:
+  a drop-in in a game with FSR 3.1, as cyboman's builds are (no AMD file
+  behind it), and otherwise OptiScaler's FidelityFX upscaler, or a custom
+  one beside the picked build. From HelixSR Desktop's set-up when its version
+  has it; the release is downloaded for it only when it is the one picked.
+- **HLX FSR 4 runs natively in Vulkan games.** Its Vulkan build, in the
+  same folder of the release, goes into its custom folder (ffx_vk) with every
+  OptiScaler install, and a game with HLX FSR 4 picked has VulkanUpscaler
+  name it, instead of running it through ffx_12's interop. Where an install
+  or a release has no Vulkan build, nothing changes.
+
 ## [0.2.6] - 2026-11-23
 
 ### Fixed

@@ -1134,7 +1134,7 @@ export function SetupChecklist({
                         넣어 오버레이(Insert)에서 바꿔 쓸 수 있습니다. 게임을 렌더링하는 실행 파일이
                         있는 곳입니다.`
                       : `OptiScaler nightly를 FSR 4 Lite로 ${shorten(detail.target)}에 설치합니다.
-                        cyboman의 FSR 4.1.2 Lite exact·lossy와 HLX FSR 4도 내려받아 custom
+                        cyboman의 FSR 4.1.2 Lite exact·lossy와 HLX FSR 4·HLX FSR 4 Full도 내려받아 custom
                         업스케일러로 함께 넣어, 플레이 중 오버레이(Insert)에서 바꿔 쓸 수 있습니다.
                         게임을 렌더링하는 실행 파일이 있는 곳입니다.`
                 }

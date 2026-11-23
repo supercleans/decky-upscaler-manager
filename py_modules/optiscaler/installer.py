@@ -18,12 +18,15 @@ from .payload import sha256
 from .constants import (
     BACKUP_DIR,
     CUSTOM_UPSCALER_DIR,
+    CUSTOM_UPSCALER_NAMES,
+    CUSTOM_VK_DIR,
     DEFAULT_PROXY,
     DEFAULT_UPSCALER,
     ENGINE_HELIXSR,
     ENGINE_NIGHTLY,
     FFX_UPSCALER_AMD_FILE,
     FFX_UPSCALER_DLL,
+    FFX_UPSCALER_VK_FILE,
     FSR4_MIN_SDK_VERSION,
     INI_NAME,
     LAUNCH_RECORD_NAME,
@@ -39,6 +42,7 @@ from .constants import (
     REFRAMEWORK_PD_ROOT_LIBS,
     RUNTIME_ARTIFACTS,
     UPSCALER_HLX_DLSS,
+    UPSCALER_HLX_FSR4,
     UPSCALER_PRESETS,
 )
 
@@ -245,8 +249,22 @@ def upscaler_of(target_dir):
     return (read_manifest(target_dir) or {}).get("upscaler") or DEFAULT_UPSCALER
 
 
-def preset_for(upscaler):
-    return UPSCALER_PRESETS.get(upscaler) or UPSCALER_PRESETS[DEFAULT_UPSCALER]
+def preset_for(upscaler, target_dir=None):
+    """The upscaler's ini values, for the folder at ``target_dir`` when given.
+
+    HLX FSR 4 runs natively in Vulkan games from its Vulkan build in the
+    custom folder, so VulkanUpscaler names it where the folder has that build;
+    where it does not (an install from before, or a release without it), the
+    plain preset keeps running HLX FSR 4 there through ffx_12.
+    """
+    preset = UPSCALER_PRESETS.get(upscaler) or UPSCALER_PRESETS[DEFAULT_UPSCALER]
+    name = CUSTOM_UPSCALER_NAMES.get(upscaler)
+    if (upscaler == UPSCALER_HLX_FSR4 and target_dir is not None
+            and (Path(target_dir) / OPTI_DIR / CUSTOM_UPSCALER_DIR / name / CUSTOM_VK_DIR
+                 / FFX_UPSCALER_VK_FILE).is_file()):
+        upscalers = {**preset.get("Upscalers", {}), "VulkanUpscaler": name}
+        preset = {**preset, "Upscalers": upscalers}
+    return preset
 
 
 def preset_state(target_dir):
@@ -258,7 +276,7 @@ def preset_state(target_dir):
     ini = Path(target_dir) / INI_NAME
     values = IniFile(ini).to_dict() if ini.is_file() else {}
     keys = []
-    for section, entries in preset_for(upscaler_of(target_dir)).items():
+    for section, entries in preset_for(upscaler_of(target_dir), target_dir).items():
         for key, wanted in entries.items():
             actual = values.get(section, {}).get(key)
             keys.append({"section": section, "key": key, "wanted": wanted,
@@ -293,7 +311,7 @@ def apply_preset(ini_path, extra=None, logger=None, upscaler=None):
     ini_path = Path(ini_path)
     if not ini_path.is_file():
         return []
-    preset = preset_for(upscaler or upscaler_of(ini_path.parent))
+    preset = preset_for(upscaler or upscaler_of(ini_path.parent), ini_path.parent)
     ini = IniFile(ini_path)
     written = []
     for section, values in list(preset.items()) + list((extra or {}).items()):
@@ -502,7 +520,8 @@ def install(target_dir, payload_root, filename=DEFAULT_PROXY, preserve_ini=True,
     ``ffx_upscalers`` are ``{"path", "name", "variant", "tag", "main"}`` of
     FidelityFX upscaler builds: the one with ``main`` takes the payload's own
     upscaler's place, which every FFX backend (DX12, and DX11/Vulkan through
-    ffx_12) runs; the others go in as OptiScaler custom upscalers.
+    ffx_12) runs; the others go in as OptiScaler custom upscalers. One with a
+    ``vk_path`` also has its Vulkan build put in its custom folder.
 
     ``release`` is the build it came from ({"tag", "version"}), recorded in
     the manifest so the game page can say which build a game has.
@@ -622,9 +641,12 @@ def install(target_dir, payload_root, filename=DEFAULT_PROXY, preserve_ini=True,
     # and a main one was overwritten by the payload already.
     custom_root = target / OPTI_DIR / CUSTOM_UPSCALER_DIR
     for old in old_manifest.get("ffx_upscalers") or []:
-        path = target / old.get("path", "")
-        if old.get("path") and not old.get("main") and custom_root in path.parents and path.is_file():
-            shutil.rmtree(path.parent.parent, ignore_errors=True)
+        for key in ("path", "vk_path"):
+            if key == "path" and old.get("main"):
+                continue
+            path = target / (old.get(key) or "")
+            if old.get(key) and custom_root in path.parents and path.is_file():
+                shutil.rmtree(path.parent.parent, ignore_errors=True)
     ffx_records = []
     for ffx_upscaler in ffx_upscalers or []:
         name = ffx_upscaler["name"]
@@ -633,10 +655,18 @@ def install(target_dir, payload_root, filename=DEFAULT_PROXY, preserve_ini=True,
                        else custom_root / name / "ffx" / Path(FFX_UPSCALER_DLL).name)
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ffx_upscaler["path"], destination)
-        ffx_records.append({"name": name, "variant": ffx_upscaler.get("variant"),
-                            "tag": ffx_upscaler.get("tag"), "main": main,
-                            "path": destination.relative_to(target).as_posix(),
-                            "sha256": sha256(destination)})
+        record = {"name": name, "variant": ffx_upscaler.get("variant"),
+                  "tag": ffx_upscaler.get("tag"), "main": main,
+                  "path": destination.relative_to(target).as_posix(),
+                  "sha256": sha256(destination)}
+        # Its Vulkan build, in the custom folder whichever one is main: Vulkan
+        # names a custom upscaler, it cannot take over AMD's file the way DX12 does.
+        if ffx_upscaler.get("vk_path"):
+            vk = custom_root / name / CUSTOM_VK_DIR / FFX_UPSCALER_VK_FILE
+            vk.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ffx_upscaler["vk_path"], vk)
+            record.update(vk_path=vk.relative_to(target).as_posix(), vk_sha256=sha256(vk))
+        ffx_records.append(record)
         if logger:
             logger.info("%s upscaler %s (%s) added", "FidelityFX" if main else "custom",
                         name, ffx_upscaler.get("tag"))
@@ -947,12 +977,14 @@ def verify_install(target_dir, payload_root, release=None):
                    destination.is_file() and destination.stat().st_size == size)
 
     for custom in manifest.get("ffx_upscalers") or []:
-        if not custom.get("path"):
-            continue
-        # A custom upscaler, or the build over the payload's, against what went in.
-        destination = target / custom["path"]
-        record(custom["path"], destination, 0,
-               destination.is_file() and sha256(destination) == custom.get("sha256"))
+        # A custom upscaler, or the build over the payload's, and its Vulkan
+        # build, each against what went in.
+        for key, digest in (("path", "sha256"), ("vk_path", "vk_sha256")):
+            if not custom.get(key):
+                continue
+            destination = target / custom[key]
+            record(custom[key], destination, 0,
+                   destination.is_file() and sha256(destination) == custom.get(digest))
 
     installed_tag = manifest.get("optiscaler_tag")
     outdated = bool(installed_tag and release.get("tag") and installed_tag != release["tag"])

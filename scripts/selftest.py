@@ -3119,8 +3119,12 @@ def check_hlx():
         shutil.rmtree(root, ignore_errors=True)
 
 
-def helixsr_release(folder, version="3.2.0", nvidia=b"MZ nvngx_dlss 310.7.0"):
-    """A HelixSR release unpacked as hlx.fetch_release leaves it, HLX DLSS not built."""
+def helixsr_release(folder, version="3.2.0", nvidia=b"MZ nvngx_dlss 310.7.0", scaler_upscalers=False):
+    """A HelixSR release unpacked as hlx.fetch_release leaves it, HLX DLSS not built.
+
+    ``scaler_upscalers`` adds what HelixSR Scaler's folder carries built from
+    3.3.0: HLX FSR 4 for Vulkan and HLX FSR 4 Full.
+    """
     (folder / "setup").mkdir(parents=True)
     (folder / "HelixSR").mkdir()
     (folder / "HLX-FSR4").mkdir()
@@ -3137,6 +3141,13 @@ def helixsr_release(folder, version="3.2.0", nvidia=b"MZ nvngx_dlss 310.7.0"):
     (scaler / "OptiScaler.dll").write_bytes(b"MZ")
     (scaler / "OptiScaler.ini").write_text("[Upscalers]\n")
     (scaler / "README-Linux.txt").write_text("HelixSR Scaler 2.2.0 for Linux and Steam Deck\n")
+    if scaler_upscalers:
+        vk = scaler / "OptiScaler/custom/HLX FSR 4/ffx_vk/amd_fidelityfx_upscaler_vk.dll"
+        full = scaler / "OptiScaler/custom/HLX FSR 4 Full/ffx/amd_fidelityfx_upscaler_dx12.dll"
+        for path, body in ((vk, b"MZ HLX FSR 4 Vulkan" + b"HLXFSR4V" + b"\0" * 16),
+                           (full, b"MZ HLX FSR 4 Full" + b"HLXFULL2" + b"\0" * 16)):
+            path.parent.mkdir(parents=True)
+            path.write_bytes(body)
     return folder
 
 
@@ -3720,9 +3731,10 @@ def check_cyboman():
                   (target / custom.format("amd-fsr4")).read_bytes() == amd
                   and (target / custom.format("cyboman-4.1.2l-lossy")).read_bytes() == b"cyboman 4.1.2l-lossy"
                   and not (target / custom.format("cyboman-4.1.2l-exact")).exists())
-            check("one that cannot be downloaded (HLX FSR 4 here) is left out and said so",
+            check("one that cannot be downloaded (HelixSR's here) is left out and said so",
                   not (target / "OptiScaler/custom/hlx-fsr4").exists()
-                  and [e["upscaler"] for e in result.get("custom_errors", [])] == ["hlx-fsr4"],
+                  and [e["upscaler"] for e in result.get("custom_errors", [])]
+                  == ["hlx-fsr4", "hlx-fsr4-full"],
                   result.get("custom_errors"))
             picked = asyncio.run(service.install(str(target), "dxgi.dll", True, False, None, "hlx-fsr4"))
             check("but the picked one failing fails the install",
@@ -3754,7 +3766,7 @@ def check_cyboman():
             check("and an uninstall takes them all out",
                   not (target / "OptiScaler").exists(), sorted(p.name for p in target.iterdir()))
 
-            # A BC-250 takes HelixSR's two only, and downloads nothing else.
+            # A BC-250 takes HelixSR's only, and downloads nothing else.
             import optiscaler.service as service_mod
             real_gpu = service_mod.gpu_info
             service_mod.gpu_info = lambda: {"device": "bc250"}
@@ -3766,9 +3778,108 @@ def check_cyboman():
                 check("and so is FSR 4 Lite's drop-in", not refused.get("ok"), refused)
                 found, errors = asyncio.run(service._custom_upscalers("hlx-dlss", str(root / "payload")))
                 check("and an install there does not even download cyboman's builds",
-                      not found and [e["upscaler"] for e in errors] == ["hlx-fsr4"], (found, errors))
+                      not found and [e["upscaler"] for e in errors] == ["hlx-fsr4", "hlx-fsr4-full"],
+                      (found, errors))
             finally:
                 service_mod.gpu_info = real_gpu
+        finally:
+            dropin.wiki.download_json = real_json
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+def check_hlx_scaler_upscalers():
+    """HLX FSR 4 for Vulkan and HLX FSR 4 Full, out of HelixSR Scaler's folder.
+
+    Both ship built in the release from 3.3.0. HLX FSR 4's Vulkan build goes in
+    its custom folder (ffx_vk), and a game with HLX FSR 4 picked has Vulkan name
+    it - only where that build went in, so an older release or install keeps
+    running HLX FSR 4 through ffx_12. HLX FSR 4 Full is an upscaler of its own,
+    a custom one or AMD's place in OptiScaler, a drop-in otherwise.
+    """
+    print("\nHLX FSR 4 for Vulkan and HLX FSR 4 Full")
+    from optiscaler import dropin
+    from optiscaler.constants import FFX_UPSCALER_DLL
+    from optiscaler.inifile import IniFile
+
+    root = Path(tempfile.mkdtemp(prefix="optiscaler-hlxscaler-"))
+    try:
+        release = helixsr_release(root / "runtime" / "helixsr" / "v3.4.1", "3.4.1", scaler_upscalers=True)
+        service = OptiScalerService(ROOT, root / "settings", root / "runtime", root,
+                                    logging.getLogger("selftest"))
+        use_payload(service, build_payload(root))
+        service.dropin_cache = lambda: root / "cyboman"
+        service._set_installed("helixsr", "v3.4.1")
+        real_json = dropin.wiki.download_json
+
+        def offline(*args, **kwargs):
+            raise OSError("offline")
+
+        dropin.wiki.download_json = offline
+        try:
+            target = root / "games" / "Vulkan"
+            target.mkdir(parents=True)
+            (target / "Game.exe").write_bytes(b"MZ")
+            custom = target / "OptiScaler" / "custom"
+            vk = custom / "hlx-fsr4" / "ffx_vk" / "amd_fidelityfx_upscaler_vk.dll"
+            result = asyncio.run(service.install(str(target), "dxgi.dll", False, False, None, "hlx-fsr4"))
+            values = IniFile(target / INI_NAME).to_dict().get("Upscalers", {})
+            check("HLX FSR 4 takes AMD's place, its Vulkan build in its custom folder",
+                  result.get("ok") and (target / FFX_UPSCALER_DLL).read_bytes().startswith(b"MZ HLX FSR 4")
+                  and vk.read_bytes().startswith(b"MZ HLX FSR 4 Vulkan")
+                  and not (custom / "hlx-fsr4" / "ffx").exists(), result.get("error"))
+            check("and Vulkan games are pointed at it, the others still through OptiScaler's own",
+                  values.get("VulkanUpscaler") == "hlx-fsr4" and values.get("Dx12Upscaler") == "ffx"
+                  and values.get("Dx11Upscaler") == "ffx_12"
+                  and installer.fsr4_status(target)["preset"]["applied"], values)
+            check("HLX FSR 4 Full goes in beside it as a custom upscaler",
+                  (custom / "hlx-fsr4-full" / "ffx" / FFX_UPSCALER_DLL.split("/")[-1]).read_bytes()
+                  .startswith(b"MZ HLX FSR 4 Full"))
+            verified = asyncio.run(service.verify_install(str(target)))
+            check("a verify checks the Vulkan build too",
+                  verified.get("complete") and not verified.get("problems")
+                  and any(f["name"].endswith("ffx_vk/amd_fidelityfx_upscaler_vk.dll") and f["matches_payload"]
+                          for f in verified["files"]), verified.get("problems"))
+
+            result = asyncio.run(service.install(str(target), "dxgi.dll", True, False, None, "hlx-fsr4-full"))
+            values = IniFile(target / INI_NAME).to_dict().get("Upscalers", {})
+            check("HLX FSR 4 Full picked takes AMD's place; HLX FSR 4 moves to its custom folder, Vulkan too",
+                  result.get("ok") and (target / FFX_UPSCALER_DLL).read_bytes().startswith(b"MZ HLX FSR 4 Full")
+                  and (custom / "hlx-fsr4" / "ffx" / "amd_fidelityfx_upscaler_dx12.dll").is_file()
+                  and vk.is_file() and not (custom / "hlx-fsr4-full").exists()
+                  and installer.detect(str(target))["upscaler"] == "hlx-fsr4-full", result.get("error"))
+            check("and every API runs HLX FSR 4 Full through OptiScaler's own",
+                  values.get("VulkanUpscaler") == "ffx_12" and values.get("Dx12Upscaler") == "ffx"
+                  and installer.fsr4_status(target)["preset"]["applied"], values)
+
+            # A release without the Vulkan build: HLX FSR 4 runs through ffx_12 as before.
+            vk_source = release / "helixsr-scaler/OptiScaler/custom/HLX FSR 4/ffx_vk/amd_fidelityfx_upscaler_vk.dll"
+            vk_source.unlink()
+            result = asyncio.run(service.install(str(target), "dxgi.dll", True, False, None, "hlx-fsr4"))
+            values = IniFile(target / INI_NAME).to_dict().get("Upscalers", {})
+            check("without a Vulkan build HLX FSR 4 is installed as before, nothing left behind",
+                  result.get("ok") and not (custom / "hlx-fsr4").exists()
+                  and values.get("VulkanUpscaler") == "ffx_12"
+                  and installer.fsr4_status(target)["preset"]["applied"], (values, result.get("error")))
+            installer.uninstall(str(target))
+            check("and an uninstall takes them all out", not (target / "OptiScaler").exists())
+
+            # In a game with FSR 3.1 of its own, HLX FSR 4 Full is a drop-in like cyboman's.
+            game = root / "games" / "Split" / "bin"
+            game.mkdir(parents=True)
+            (game / "Game.exe").write_bytes(_pe(0x8664))
+            (game / "amd_fidelityfx_upscaler_dx12.dll").write_bytes(b"game upscaler 3.1")
+            result = asyncio.run(service.install_dropin(str(game.parent), "hlx-fsr4-full"))
+            state = asyncio.run(service.get_dropin(str(game.parent)))
+            check("as a drop-in, HLX FSR 4 Full replaces the game's file, nothing kept beside it",
+                  result.get("ok") and (game / "amd_fidelityfx_upscaler_dx12.dll").read_bytes()
+                  .startswith(b"MZ HLX FSR 4 Full") and state.get("upscaler") == "hlx-fsr4-full"
+                  and not (game / "amd_fidelityfx_upscaler_dx12.original.dll").exists(), (result, state))
+            (game / "HLX_FSR.log").write_text("ran")
+            dropin.uninstall(str(game.parent))
+            check("and removing it puts the game's back, its log gone",
+                  (game / "amd_fidelityfx_upscaler_dx12.dll").read_bytes() == b"game upscaler 3.1"
+                  and not (game / "HLX_FSR.log").exists())
         finally:
             dropin.wiki.download_json = real_json
     finally:
@@ -4163,6 +4274,7 @@ def main():
     check_helixsr()
     check_requirements()
     check_cyboman()
+    check_hlx_scaler_upscalers()
     check_hlx()
     check_hlx_build()
     check_setup()

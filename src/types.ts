@@ -68,13 +68,15 @@ export interface Game {
  * The upscaler a game is set up for, picked before anything else. FSR 4 Lite
  * is OptiScaler's nightly; cyboman's two FSR 4.1.2 Lite builds are a drop-in
  * where the game ships FSR 3.1 and go into OptiScaler where it does not; HLX
- * FSR 4 likewise, with HelixSR Scaler; HLX DLSS needs HelixSR Scaler.
+ * FSR 4 and HLX FSR 4 Full likewise, out of HelixSR's release; HLX DLSS needs
+ * HelixSR Scaler.
  */
 export type Upscaler =
   | "fsr4-lite"
   | "fsr412l-exact"
   | "fsr412l-lossy"
   | "hlx-fsr4"
+  | "hlx-fsr4-full"
   | "hlx-dlss";
 /** The OptiScaler build an install came from. */
 export type Engine = "nightly" | "helixsr";

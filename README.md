@@ -6,7 +6,7 @@
 게임 모드(SteamOS, Bazzite 등)에서 게임별로 업스케일러를 골라 설치하고 관리하는
 [Decky Loader](https://github.com/SteamDeckHomebrew/decky-loader) 플러그인입니다.
 [OptiScaler](https://github.com/optiscaler/OptiScaler)의 **FSR 4 Lite**, cyboman의 FSR 4.1.2 Lite 빌드,
-[HelixSR](https://github.com/lonewolf0622/HelixSR)의 HLX FSR 4와 HLX DLSS 중에서 고르면 게임에 맞는
+[HelixSR](https://github.com/lonewolf0622/HelixSR)의 HLX FSR 4·HLX FSR 4 Full·HLX DLSS 중에서 고르면 게임에 맞는
 방식(드롭인, OptiScaler, HelixSR Scaler)으로 넣고, 그 밖의 설정은 OptiScaler의 게임 내 오버레이에서
 바꿉니다. 예전 이름은 Decky OptiScaler Plus입니다.
 
@@ -59,19 +59,22 @@ OptiScaler는 [nightly 채널](https://github.com/optiscaler/OptiScaler-nightly/
   | **FSR 4 Lite** (기본) | FSR 3.1 게임은 nightly에 든 AMD FSR 4.1.2 파일을 드롭인으로(시험), 그 외는 OptiScaler nightly + FSR 4 Lite 프리셋 |
   | **FSR 4.1.2 Lite exact** | FSR 3.1 게임은 드롭인, 그 외는 OptiScaler의 FidelityFX 업스케일러 자리에 |
   | **FSR 4.1.2 Lite lossy** | FSR 3.1 게임은 드롭인, 그 외는 OptiScaler의 FidelityFX 업스케일러 자리에 |
-  | **HLX FSR 4** | FSR 3.1 게임은 드롭인, 그 외는 OptiScaler의 FidelityFX 업스케일러 자리에 |
+  | **HLX FSR 4** | FSR 3.1 게임은 드롭인, 그 외는 OptiScaler의 FidelityFX 업스케일러 자리에(Vulkan 게임은 Vulkan 빌드로) |
+  | **HLX FSR 4 Full** | FSR 3.1 게임은 드롭인, 그 외는 OptiScaler의 FidelityFX 업스케일러 자리에 |
   | **HLX DLSS** | HelixSR Scaler |
 
   기본 추천은 기기에 따라 다릅니다. 스팀덱(LCD·OLED)은 **FSR 4 Lite**, BC-250은 **HLX FSR 4**입니다.
-  BC-250에서는 **HLX FSR 4와 HLX DLSS만** 고를 수 있습니다. OptiScaler가 이 GPU를 FSR 4 지원 GPU로 보지
+  BC-250에서는 **HelixSR의 업스케일러(HLX FSR 4, HLX FSR 4 Full, HLX DLSS)만** 고를 수 있습니다. OptiScaler가 이 GPU를 FSR 4 지원 GPU로 보지
   않아 AMD의 FSR 4와 cyboman 빌드는 FSR 3으로 돌고, int8 연산도 느립니다. HLX FSR 4는 거기서 fp16 버전을
   골라 씁니다. 기기는 GPU의 PCI ID로 알아냅니다.
 
-  OptiScaler(nightly)로 설치할 때는 업스케일러 FSR 4 계열을 모두 함께 넣습니다. 고른 빌드(cyboman 또는
-  HLX FSR 4)는 OptiScaler 폴더의 FidelityFX 업스케일러 자리(`OptiScaler/amd_fidelityfx_upscaler_dx12.dll`)에
+  OptiScaler(nightly)로 설치할 때는 업스케일러 FSR 4 계열을 모두 함께 넣습니다. 고른 빌드(cyboman,
+  HLX FSR 4 또는 HLX FSR 4 Full)는 OptiScaler 폴더의 FidelityFX 업스케일러 자리(`OptiScaler/amd_fidelityfx_upscaler_dx12.dll`)에
   들어가므로, DX12뿐 아니라 DX11·Vulkan 게임(dx11on12·VKon12의 `ffx_12`)에서도 그 빌드가 돕니다. AMD의
   FSR 4와 나머지 빌드는 `OptiScaler/custom/`에 넣어 플레이 중 오버레이에서 바꿔 가며 비교할 수 있습니다.
-  FSR 4 Lite를 고르면 AMD 파일이 그 자리에 있고 cyboman exact·lossy와 HLX FSR 4가 custom에 들어갑니다.
+  FSR 4 Lite를 고르면 AMD 파일이 그 자리에 있고 cyboman exact·lossy와 HLX FSR 4·HLX FSR 4 Full이 custom에
+  들어갑니다. HLX FSR 4의 Vulkan 빌드는 항상 `OptiScaler/custom/hlx-fsr4/ffx_vk`에 들어가고, HLX FSR 4를
+  고른 게임은 `VulkanUpscaler`가 그것을 가리켜 Vulkan 게임에서 `ffx_12` 경유 없이 직접 돕니다.
   고른 것이 아닌 업스케일러를 받지 못하면 그것만 빼고 설치하고 알려 줍니다.
 
   쓸 수 없는 업스케일러는 이유를 함께 보여 주고, 이미 설치된 게임은 다른 업스케일러를 고르면 파일
@@ -91,7 +94,13 @@ OptiScaler는 [nightly 채널](https://github.com/optiscaler/OptiScaler-nightly/
     HelixSR 공식 릴리스에서 직접 받습니다(zip을 digest로 검증한 뒤 릴리스 폴더째로 풀어 둠, 약 370MB). FSR 3.1 게임에는
     HelixSR 방식 그대로 드롭인으로(원래 파일은 옆에 `*.original.dll`로), 그 외 게임에는 OptiScaler의
     FidelityFX 업스케일러 자리에 넣습니다. HelixSR Scaler가 쓰는 것과 같은 배치라, HelixSR Scaler 없이도
-    DX12·DX11·Vulkan 게임에서 HLX FSR 4가 돕니다.
+    DX12·DX11·Vulkan 게임에서 HLX FSR 4가 돕니다. 3.3.0부터 릴리스의 HelixSR Scaler 폴더에 들어 있는
+    Vulkan 빌드도 함께 넣어, Vulkan 게임은 그것으로 직접 돌립니다.
+  - **HLX FSR 4 Full**은 AMD FSR 4.1.2의 원래 크기(Full) 신경망을 자체 런타임으로 돌립니다(뒤에 AMD 파일이
+    필요 없음). 3.3.0부터 같은 릴리스의 HelixSR Scaler 폴더에 빌드된 채로 들어 있어 거기서 꺼내 씁니다.
+    Lite보다 화질이 좋고 느립니다(BC-250에서 HLX FSR 4의 약 2배 시간이며, Steam Deck 수치는 아직 없음).
+    FSR 3.1 게임에는 cyboman 빌드처럼 드롭인으로, 그 외 게임에는 OptiScaler의 FidelityFX 업스케일러 자리에
+    넣습니다.
   - **HLX DLSS**는 NVIDIA 파일로 각자의 기기에서 빌드해야 하고 공유할 수 없습니다. HelixSR Desktop으로
     빌드해 둔 것이 있으면 그것을 쓰고, 없으면 **HLX DLSS 빌드** 버튼(업스케일러 목록이나 설정의 HelixSR
     항목)으로 플러그인이 받아 둔 릴리스에서 HelixSR 공식 설정 스크립트(`helixsr-setup.sh`)를 수정 없이
@@ -106,7 +115,8 @@ OptiScaler는 [nightly 채널](https://github.com/optiscaler/OptiScaler-nightly/
     - HelixSR Scaler(HelixSR의 OptiScaler 포크)로 게임에 넣는 것은 여기서 합니다. 게임에서 DLSS를
       고르면 동작하고, HelixSR Scaler에 들어 있는 OptiPatcher는 그대로 사용합니다. 새 빌드가 생긴 뒤
       설정의 **게임 업데이트**를 누르면 새 빌드가 들어갑니다.
-    - HelixSR Desktop으로 설정한 HelixSR가 있으면 HLX FSR 4와 HLX DLSS 모두 그것을 씁니다. 새
+    - HelixSR Desktop으로 설정한 HelixSR가 있으면 HLX FSR 4·HLX FSR 4 Full·HLX DLSS 모두 그것을 씁니다
+      (그 버전에 HLX FSR 4 Full이 없으면 고를 때만 플러그인이 릴리스를 받습니다). 새
       HelixSR가 나오면 알려만 주고, 업데이트는 HelixSR Desktop에서 합니다. 쓰던 HelixSR Desktop의
       HelixSR가 없어지면 알려 주고, 설정에서 플러그인으로 HelixSR를 설치할 수 있습니다.
   - HelixSR Desktop이 직접 설치한 게임은 건드리지 않습니다.
@@ -171,9 +181,9 @@ OptiScaler는 [nightly 채널](https://github.com/optiscaler/OptiScaler-nightly/
 
 **게임 상세 화면** (게임을 고르면 열림)
 
-- **업스케일러**: FSR 4 Lite, FSR 4.1.2 Lite exact·lossy, HLX FSR 4, HLX DLSS 중 선택. 항목마다 설명과
-  넣는 방식(드롭인 / OptiScaler / HelixSR Scaler), 적용됨·추천·간단·불가 표시. BC-250에서는 HLX 두
-  가지만 보입니다. HLX DLSS가 없으면 그 자리에서 빌드할 수 있습니다.
+- **업스케일러**: FSR 4 Lite, FSR 4.1.2 Lite exact·lossy, HLX FSR 4, HLX FSR 4 Full, HLX DLSS 중 선택. 항목마다 설명과
+  넣는 방식(드롭인 / OptiScaler / HelixSR Scaler), 적용됨·추천·간단·불가 표시. BC-250에서는 HLX
+  업스케일러만 보입니다. HLX DLSS가 없으면 그 자리에서 빌드할 수 있습니다.
 - **FSR 드롭인**(FSR 3.1이 있는 게임): 게임의 FSR DLL을 고른 빌드로 바꾸고 원본은 백업합니다. 제거하면
   원래대로 돌아가고, 게임 업데이트로 원본이 돌아오면 알려 줍니다.
 - **설치 체크리스트**(OptiScaler 방식)
@@ -215,7 +225,7 @@ OptiScaler는 [nightly 채널](https://github.com/optiscaler/OptiScaler-nightly/
 
 - OptiScaler nightly
 - cyboman의 FSR 4.1.2 Lite exact·lossy (BC-250에서는 쓰지 않으므로 받지 않음)
-- HelixSR 공식 릴리스(HLX FSR 4)
+- HelixSR 공식 릴리스(HLX FSR 4, HLX FSR 4 Full)
 - HLX DLSS: **HLX DLSS 사용**을 켰을 때만(기본 꺼짐) HelixSR 공식 설정 스크립트로 빌드합니다. 빌드
   전에 NVIDIA 라이선스 동의를 받고, 몇 분 이상 걸리며 Proton이 필요합니다. 꺼 두고 설치해도 설정의
   **HLX DLSS 빌드**나 업스케일러 목록에서 언제든 빌드할 수 있습니다.

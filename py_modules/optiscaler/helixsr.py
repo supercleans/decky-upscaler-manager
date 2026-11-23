@@ -16,7 +16,9 @@ from .constants import (
     HELIXSR_DIR,
     HELIXSR_DLL,
     HELIXSR_FOREIGN_MARKERS,
+    HELIXSR_HLX_FULL_TRAILER,
     HELIXSR_HLX_TRAILER,
+    HELIXSR_HLX_VK_TRAILER,
     HELIXSR_NET_TRAILERS,
     HELIXSR_PAGE,
     HELIXSR_SCALER_DIR,
@@ -45,6 +47,16 @@ def network_built(path):
 def hlx_built(path):
     """Whether an HLX FSR 4 DLL carries the shaders HelixSR's setup builds into it."""
     return _trailer(path, 24) == HELIXSR_HLX_TRAILER
+
+
+def hlx_vk_built(path):
+    """Whether HLX FSR 4's Vulkan DLL carries its shaders."""
+    return _trailer(path, 24) == HELIXSR_HLX_VK_TRAILER
+
+
+def hlx_full_built(path):
+    """Whether an HLX FSR 4 Full DLL carries its shaders."""
+    return _trailer(path, 24).startswith(HELIXSR_HLX_FULL_TRAILER)
 
 
 def _version(dll):
