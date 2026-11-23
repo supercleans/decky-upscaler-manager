@@ -1,14 +1,14 @@
 {
   "nightly": {
-    "tag": "nightly-20261101",
-    "published_at": "2026-11-01T11:07:04Z"
+    "tag": "nightly-20261122",
+    "published_at": "2026-11-22T12:21:32Z"
   },
   "dropin": {
-    "tag": "dll-2026-11-01",
-    "published_at": "2026-11-01T14:17:28Z"
+    "tag": "dll-2026-11-22",
+    "published_at": "2026-11-22T17:58:01Z"
   },
   "helixsr": {
-    "tag": "v3.2.0",
-    "published_at": "2026-10-29T04:58:31Z"
+    "tag": "v3.4.1",
+    "published_at": "2026-11-17T04:30:00Z"
   }
 }

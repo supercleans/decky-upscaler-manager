@@ -7,6 +7,8 @@ Decky OptiScaler plugin this one grew out of, which bundled **OptiScaler
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-11-23
+
 ### Fixed
 
 - **The OptiScaler nightly stopped at 2026-11-16.** From 2026-11-17 the
